@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Nexa AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="header">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <h1>
+            <div class="logo">N</div> Nexa AI
+        </h1>
+        <div style="width: 48px;"></div>
+    </div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+
+            <div class="section" id="savedChatsSection" style="display: none;">
+                <div class="section-title">SAVED CHATS</div>
+                <div id="savedChatsList"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">QUICK COMMANDS</div>
+                <button class="menu-item" onclick="sendCommand('time')"><span class="menu-icon">⏰</span>Time</button>
+                <button class="menu-item" onclick="sendCommand('battery')"><span
+                        class="menu-icon">🔋</span>Battery</button>
+                <button class="menu-item" onclick="sendCommand('cpu')"><span class="menu-icon">💻</span>CPU</button>
+                <button class="menu-item" onclick="sendCommand('ram')"><span class="menu-icon">🧠</span>RAM</button>
+                <button class="menu-item" onclick="sendCommand('news')"><span class="menu-icon">📰</span>News</button>
+                <button class="menu-item" onclick="sendCommand('joke')"><span class="menu-icon">😄</span>Joke</button>
+                <button class="menu-item" onclick="sendCommand('screenshot')"><span
+                        class="menu-icon">📸</span>Screenshot</button>
+                <button class="menu-item" onclick="sendCommand('list tasks')"><span
+                        class="menu-icon">📝</span>Tasks</button>
+            </div>
+            <div class="section">
+                <div class="section-title">SYSTEM CONTROL</div>
+                <button class="menu-item" onclick="sendCommand('shutdown')"><span
+                        class="menu-icon">⏻</span>Shutdown</button>
+                <button class="menu-item" onclick="sendCommand('restart')"><span
+                        class="menu-icon">🔄</span>Restart</button>
+                <button class="menu-item" onclick="sendCommand('clean system')"><span class="menu-icon">🧹</span>Clean
+                    System</button>
+            </div>
+            <div class="section">
+                <div class="section-title">TASK MANAGER</div>
+                <button class="menu-item" onclick="addTaskPrompt()"><span class="menu-icon">➕</span>Add Task</button>
+                <button class="menu-item" onclick="sendCommand('list tasks')"><span class="menu-icon">📋</span>List
+                    Tasks</button>
+                <button class="menu-item" onclick="removeTaskPrompt()"><span class="menu-icon">➖</span>Remove
+                    Task</button>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox"></div>
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <div class="input-area">
+                        <button class="icon-btn mic-btn" id="micBtn" onclick="startVoice()"
+                            title="Voice input">🎤</button>
+                        <input type="text" id="userInput" placeholder="Message Nexa AI..."
+                            onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="icon-btn speaker-btn" id="speakerBtn" onclick="toggleSpeaker()"
+                            title="Toggle voice output">🔊</button>
+                        <button class="send-btn" onclick="sendMessage()" title="Send message">↑</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,10 @@
+speechrecognition
+pyttsx3
+pywhatkit
+wikipedia
+openai
+psutil
+pyautogui
+streamlit
+pyaudio
+flask
