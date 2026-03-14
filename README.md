@@ -68,3 +68,5 @@ Access at `http://localhost:10000`
 - "clean system" - Clear temp files
 - "shutdown" / "restart" - System control
 - "new chat" - Start fresh conversation
+
+#### Live Link :- https://nexa-ai-web--harshkr53453.replit.app/
