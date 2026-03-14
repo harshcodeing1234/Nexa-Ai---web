@@ -23,17 +23,21 @@ chat_history = [{"role": "system", "content": "You are Nexa, a professional AI a
 tasks = []
 saved_chats = []
 current_chat_id = 0
+current_model = "DeepSeek-V3.1"
 
 def chat(query):
-    global chat_history
+    global chat_history, current_model
     try:
         chat_history.append({"role": "user", "content": query})
-        response = client.chat.completions.create(model="DeepSeek-V3.1", messages=chat_history, max_tokens=100, temperature=0.7)
+        response = client.chat.completions.create(model=current_model, messages=chat_history, max_tokens=100, temperature=0.7)
         reply = response.choices[0].message.content
         chat_history.append({"role": "assistant", "content": reply})
         return reply
     except Exception as e:
-        return f"Some error occured sorry form nexa"
+        if "429" in str(e):
+            time.sleep(5)
+            return "Some Error Occured Sorry from nexa."
+        return str(e)
     
 
 @app.route('/')
@@ -315,6 +319,13 @@ def features():
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
+
+@app.route('/set_model', methods=['POST'])
+def set_model():
+    global current_model
+    model = request.json.get('model', 'DeepSeek-V3.1')
+    current_model = model
+    return jsonify({'response': f'Model changed to {model}'})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

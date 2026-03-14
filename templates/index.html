@@ -3,6 +3,7 @@
 
 <head>
     <title>Nexa AI</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -10,7 +11,7 @@
     <div class="header">
         <div class="header-left">
             <h1>
-                <div class="logo">N</div> Nexa AI
+                <div class="logo" onclick="toggleModelSelector()" style="cursor: pointer;" title="Change Model">N</div> Nexa AI
             </h1>
         </div>
         <nav class="header-nav">
@@ -21,6 +22,36 @@
         </nav>
         <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
     </div>
+    
+    <div class="model-selector-modal" id="modelModal">
+        <div class="model-selector-content">
+            <h3>Select AI Model</h3>
+            <div class="model-list">
+                <div class="model-option" onclick="selectModel('DeepSeek-V3.2')">
+                    <div class="model-name">DeepSeek-V3.2</div>
+                    <div class="model-desc">Latest reasoning model</div>
+                </div>
+                <div class="model-option" onclick="selectModel('Qwen3-235B')">
+                    <div class="model-name">Qwen3-235B</div>
+                    <div class="model-desc">Large multilingual model</div>
+                </div>
+                <div class="model-option" onclick="selectModel('DeepSeek-R1-0528')">
+                    <div class="model-name">DeepSeek-R1-0528</div>
+                    <div class="model-desc">Reasoning optimized</div>
+                </div>
+                <div class="model-option" onclick="selectModel('Meta-Llama-3.1-8B-Instruct')">
+                    <div class="model-name">Meta-Llama-3.1-8B-Instruct</div>
+                    <div class="model-desc">Balanced performance</div>
+                </div>
+                <div class="model-option" onclick="selectModel('DeepSeek-V3.1')">
+                    <div class="model-name">DeepSeek-V3.1</div>
+                    <div class="model-desc">Advanced reasoning</div>
+                </div>
+            </div>
+            <button class="close-modal-btn" onclick="toggleModelSelector()">Close</button>
+        </div>
+    </div>
+    
     <div class="main-container">
         <div class="sidebar" id="sidebar">
             <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>

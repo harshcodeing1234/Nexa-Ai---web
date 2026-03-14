@@ -4,7 +4,8 @@ AI-powered desktop assistant with voice control and system management capabiliti
 
 ## Features
 
-- **AI Chat** - Conversational AI using DeepSeek-V3.1 via SambaNova API
+- **AI Chat** - Conversational AI with multiple model options via SambaNova API
+- **Model Selector** - Switch between 5 AI models (click logo to change)
 - **Voice Control** - Speech recognition and text-to-speech
 - **System Info** - Time, battery, CPU, RAM monitoring
 - **System Control** - Shutdown, restart, clean temp files
@@ -15,6 +16,14 @@ AI-powered desktop assistant with voice control and system management capabiliti
 - **News** - Top headlines via NewsAPI
 - **Screenshots** - Capture screen
 - **Chat History** - Save and load conversations
+
+## Available AI Models
+
+1. **DeepSeek-V3.2** - Complex reasoning, coding, technical questions
+2. **Qwen3-235B** - Multilingual tasks, translation, diverse knowledge
+3. **DeepSeek-R1-0528** - Research, analysis, detailed explanations
+4. **Meta-Llama-3.1-8B-Instruct** - Quick responses, general chat, fast tasks
+5. **DeepSeek-V3.1** - Balanced performance, general knowledge (default)
 
 ## Tech Stack
 

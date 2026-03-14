@@ -1,6 +1,49 @@
 let speakerEnabled = true;
 let recognition;
 let synth = window.speechSynthesis;
+let currentModel = 'DeepSeek-V3.1';
+
+function toggleModelSelector() {
+    const modal = document.getElementById('modelModal');
+    console.log('Toggle modal:', modal);
+    if (!modal) {
+        console.error('Modal not found!');
+        return;
+    }
+    modal.classList.toggle('active');
+    console.log('Modal active:', modal.classList.contains('active'));
+    if (modal.classList.contains('active')) {
+        updateSelectedModel();
+    }
+}
+
+function updateSelectedModel() {
+    document.querySelectorAll('.model-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    const options = document.querySelectorAll('.model-option');
+    options.forEach(opt => {
+        const modelName = opt.querySelector('.model-name').textContent;
+        if (currentModel.includes(modelName.split(' ')[0]) || modelName.includes(currentModel.split('-')[0])) {
+            opt.classList.add('selected');
+        }
+    });
+}
+
+async function selectModel(model) {
+    currentModel = model;
+    try {
+        await fetch('/set_model', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model })
+        });
+        toggleModelSelector();
+        addMessage(`Model changed to ${model}`, 'assistant');
+    } catch (e) {
+        addMessage('Error changing model', 'assistant');
+    }
+}
 
 if ('webkitSpeechRecognition' in window) {
     recognition = new webkitSpeechRecognition();
@@ -229,4 +272,12 @@ window.onload = function () {
     btn.classList.add('speaking');
     loadSavedChats();
     addMessage('Hello! I am Nexa AI Assistant. How can I help you today?', 'assistant');
+    
+    // Close modal on outside click
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('modelModal');
+        if (modal && e.target === modal) {
+            toggleModelSelector();
+        }
+    });
 };
