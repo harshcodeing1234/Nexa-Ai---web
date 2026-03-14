@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About - Nexa AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>
+                <div class="logo">N</div> Nexa AI
+            </h1>
+        </div>
+        <nav class="header-nav">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link active">About</a>
+            <a href="/features" class="nav-link">Features</a>
+            <a href="/contact" class="nav-link">Contact</a>
+        </nav>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <button class="new-chat-btn" onclick="window.location.href='/'">🏠 Home</button>
+
+            <div class="section">
+                <div class="section-title">NAVIGATION</div>
+                <button class="menu-item" onclick="window.location.href='/'"><span class="menu-icon">💬</span>Chat</button>
+                <button class="menu-item" onclick="window.location.href='/about'"><span class="menu-icon">ℹ️</span>About</button>
+                <button class="menu-item" onclick="window.location.href='/features'"><span class="menu-icon">⚡</span>Features</button>
+                <button class="menu-item" onclick="window.location.href='/contact'"><span class="menu-icon">📧</span>Contact</button>
+            </div>
+        </div>
+        <section class="about-section">
+            <div class="about-content">
+                <h2>About Nexa AI</h2>
+                <p>Nexa AI is an advanced AI-powered desktop assistant that combines conversational AI with powerful system management capabilities. Built with cutting-edge technology, it provides seamless voice control and intelligent automation.</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI Chat</h3>
+                        <p>Powered by DeepSeek-V3.1 via SambaNova API for intelligent conversations</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎤</div>
+                        <h3>Voice Control</h3>
+                        <p>Speech recognition and text-to-speech for hands-free interaction</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💻</div>
+                        <h3>System Management</h3>
+                        <p>Monitor CPU, RAM, battery and control system operations</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>Task Manager</h3>
+                        <p>Add, remove, and organize your tasks efficiently</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎵</div>
+                        <h3>Media Control</h3>
+                        <p>Play YouTube videos and control media playback</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌐</div>
+                        <h3>Web Integration</h3>
+                        <p>Wikipedia search, news updates, and app launcher</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="{{ url_for('static', filename='about.js') }}"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

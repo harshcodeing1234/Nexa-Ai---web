@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Features - Nexa AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='features.css') }}">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>
+                <div class="logo">N</div> Nexa AI
+            </h1>
+        </div>
+        <nav class="header-nav">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link">About</a>
+            <a href="/features" class="nav-link active">Features</a>
+            <a href="/contact" class="nav-link">Contact</a>
+        </nav>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <button class="new-chat-btn" onclick="window.location.href='/'">🏠 Home</button>
+
+            <div class="section">
+                <div class="section-title">NAVIGATION</div>
+                <button class="menu-item" onclick="window.location.href='/'"><span class="menu-icon">💬</span>Chat</button>
+                <button class="menu-item" onclick="window.location.href='/about'"><span class="menu-icon">ℹ️</span>About</button>
+                <button class="menu-item" onclick="window.location.href='/features'"><span class="menu-icon">⚡</span>Features</button>
+                <button class="menu-item" onclick="window.location.href='/contact'"><span class="menu-icon">📧</span>Contact</button>
+            </div>
+        </div>
+        <section class="features-section">
+            <div class="features-content">
+                <h2>Powerful Features</h2>
+                <p>Explore the comprehensive capabilities of Nexa AI</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-number">01</div>
+                        <div class="feature-details">
+                            <h3>🤖 Advanced AI Chat</h3>
+                            <p>Engage in natural conversations powered by DeepSeek-V3.1 through SambaNova API. Get intelligent responses, creative solutions, and helpful assistance for any query.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Natural Language</span>
+                                <span class="tag">Context Aware</span>
+                                <span class="tag">Multi-turn</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">02</div>
+                        <div class="feature-details">
+                            <h3>🎤 Voice Control</h3>
+                            <p>Hands-free operation with speech recognition and text-to-speech. Simply speak your commands and hear responses in natural voice.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Speech Recognition</span>
+                                <span class="tag">TTS</span>
+                                <span class="tag">Hands-free</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">03</div>
+                        <div class="feature-details">
+                            <h3>💻 System Monitoring</h3>
+                            <p>Real-time monitoring of CPU usage, RAM consumption, battery status, and system time. Stay informed about your system's health.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Real-time</span>
+                                <span class="tag">CPU/RAM</span>
+                                <span class="tag">Battery</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">04</div>
+                        <div class="feature-details">
+                            <h3>⚙️ System Control</h3>
+                            <p>Execute system operations like shutdown, restart, and clean temporary files with simple voice or text commands.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Shutdown</span>
+                                <span class="tag">Restart</span>
+                                <span class="tag">Cleanup</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">05</div>
+                        <div class="feature-details">
+                            <h3>📝 Task Management</h3>
+                            <p>Create, organize, and manage your tasks efficiently. Add new tasks, view your task list, and remove completed items.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Add Tasks</span>
+                                <span class="tag">List View</span>
+                                <span class="tag">Remove</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">06</div>
+                        <div class="feature-details">
+                            <h3>🎵 Media & Apps</h3>
+                            <p>Play YouTube videos, open applications, and launch websites with voice commands. Seamless integration with your favorite apps.</p>
+                            <div class="feature-tags">
+                                <span class="tag">YouTube</span>
+                                <span class="tag">App Launcher</span>
+                                <span class="tag">Web</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">07</div>
+                        <div class="feature-details">
+                            <h3>🌐 Information Hub</h3>
+                            <p>Quick access to Wikipedia articles, latest news headlines, and entertaining jokes. Stay informed and entertained.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Wikipedia</span>
+                                <span class="tag">News API</span>
+                                <span class="tag">Jokes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-number">08</div>
+                        <div class="feature-details">
+                            <h3>📸 Screenshot & History</h3>
+                            <p>Capture screenshots instantly and maintain chat history. Save and load previous conversations for continuity.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Screenshot</span>
+                                <span class="tag">Save Chat</span>
+                                <span class="tag">Load History</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="{{ url_for('static', filename='features.js') }}"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

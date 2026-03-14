@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact - Nexa AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='contact.css') }}">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>
+                <div class="logo">N</div> Nexa AI
+            </h1>
+        </div>
+        <nav class="header-nav">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link">About</a>
+            <a href="/features" class="nav-link">Features</a>
+            <a href="/contact" class="nav-link active">Contact</a>
+        </nav>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <button class="new-chat-btn" onclick="window.location.href='/'">🏠 Home</button>
+
+            <div class="section">
+                <div class="section-title">NAVIGATION</div>
+                <button class="menu-item" onclick="window.location.href='/'"><span class="menu-icon">💬</span>Chat</button>
+                <button class="menu-item" onclick="window.location.href='/about'"><span class="menu-icon">ℹ️</span>About</button>
+                <button class="menu-item" onclick="window.location.href='/features'"><span class="menu-icon">⚡</span>Features</button>
+                <button class="menu-item" onclick="window.location.href='/contact'"><span class="menu-icon">📧</span>Contact</button>
+            </div>
+        </div>
+        <section class="contact-section">
+            <div class="contact-content">
+                <h2>Get In Touch</h2>
+                <p>Have questions or feedback? We'd love to hear from you</p>
+                
+                <div class="contact-container">
+                    <div class="contact-info">
+                        <div class="info-card">
+                            <div class="info-icon">📧</div>
+                            <h3>Email</h3>
+                            <p>support@nexaai.com</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon">💬</div>
+                            <h3>Discord</h3>
+                            <p>Join our community</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon">🐙</div>
+                            <h3>GitHub</h3>
+                            <p>github.com/nexaai</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-icon">🐦</div>
+                            <h3>Twitter</h3>
+                            <p>@NexaAI</p>
+                        </div>
+                    </div>
+                    
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+                <div class="creator-note">
+                    <p>Created by <span class="creator-name">Harsh Kumar</span></p>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="{{ url_for('static', filename='contact.js') }}"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -304,6 +304,18 @@ def load_chat(chat_id):
             return jsonify({'response': 'Chat loaded', 'history': chat_history})
     return jsonify({'response': 'Chat not found'})
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/features')
+def features():
+    return render_template('features.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
     
