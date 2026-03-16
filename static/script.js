@@ -38,6 +38,7 @@ async function selectModel(model) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ model })
         });
+        document.getElementById('currentModelDisplay').textContent = model;
         toggleModelSelector();
         addMessage(`Model changed to ${model}`, 'assistant');
     } catch (e) {
@@ -122,7 +123,18 @@ function speak(text) {
 }
 
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('hidden');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        sidebar.classList.add('hidden');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
 }
 
 function newChat() {

@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexa AI</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -12,6 +13,7 @@
         <div class="header-left">
             <h1>
                 <div class="logo" onclick="toggleModelSelector()" style="cursor: pointer;" title="Change Model">N</div> Nexa AI
+                <span class="current-model" id="currentModelDisplay">DeepSeek-V3.1</span>
             </h1>
         </div>
         <nav class="header-nav">
@@ -53,6 +55,7 @@
     </div>
     
     <div class="main-container">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
         <div class="sidebar" id="sidebar">
             <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
 
@@ -63,26 +66,11 @@
 
             <div class="section">
                 <div class="section-title">QUICK COMMANDS</div>
-                <button class="menu-item" onclick="sendCommand('time')"><span class="menu-icon">⏰</span>Time</button>
-                <button class="menu-item" onclick="sendCommand('battery')"><span
-                        class="menu-icon">🔋</span>Battery</button>
-                <button class="menu-item" onclick="sendCommand('cpu')"><span class="menu-icon">💻</span>CPU</button>
-                <button class="menu-item" onclick="sendCommand('ram')"><span class="menu-icon">🧠</span>RAM</button>
                 <button class="menu-item" onclick="sendCommand('news')"><span class="menu-icon">📰</span>News</button>
                 <button class="menu-item" onclick="sendCommand('joke')"><span class="menu-icon">😄</span>Joke</button>
-                <button class="menu-item" onclick="sendCommand('screenshot')"><span
-                        class="menu-icon">📸</span>Screenshot</button>
+                <button class="menu-item" onclick="sendCommand('wikipedia AI')"><span class="menu-icon">📚</span>Wikipedia</button>
                 <button class="menu-item" onclick="sendCommand('list tasks')"><span
                         class="menu-icon">📝</span>Tasks</button>
-            </div>
-            <div class="section">
-                <div class="section-title">SYSTEM CONTROL</div>
-                <button class="menu-item" onclick="sendCommand('shutdown')"><span
-                        class="menu-icon">⏻</span>Shutdown</button>
-                <button class="menu-item" onclick="sendCommand('restart')"><span
-                        class="menu-icon">🔄</span>Restart</button>
-                <button class="menu-item" onclick="sendCommand('clean system')"><span class="menu-icon">🧹</span>Clean
-                    System</button>
             </div>
             <div class="section">
                 <div class="section-title">TASK MANAGER</div>

@@ -1,1 +1,39 @@
-__pycache
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Environment
+.env
+.venv
+venv/
+ENV/
+
+# Sensitive files
+config.py
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Screenshots
+screenshot*.png
+screenshots/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+.vscode/
+.idea/
+.env.example
+UPDATE.md
