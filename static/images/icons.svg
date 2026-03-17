@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="31" y="31" width="130" height="130" rx="30" fill="url(#grad)" />
+
+  <text x="96" y="118"
+        font-family="Arial"
+        font-size="70"
+        font-weight="bold"
+        text-anchor="middle"
+        fill="white">N</text>
+
+</svg>

@@ -2,29 +2,16 @@
   "name": "Nexa AI",
   "short_name": "Nexa AI",
   "description": "Cloud-ready AI chatbot with conversational AI and information retrieval capabilities",
-  "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
   "orientation": "portrait-primary",
-  "splash_pages": null,
   "icons": [
   {
-    "src": "/static/images/icon 192.png",
+    "src": "/static/images/icons.svg",
     "sizes": "192x192",
-    "type": "image/png",
+    "type": "image/svg+xml",
     "purpose": "any maskable"
-  },
-  {
-    "src": "/static/images/icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "any maskable"
-  },
-  {
-    "src": "/static/images/icon.svg",
-    "sizes": "any",
-    "type": "image/svg+xml"
   }
 ]
 }
