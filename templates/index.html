@@ -11,81 +11,15 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/x-icon">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        #splash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            background: #0a0a0f;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            animation: fadeOut 0.5s ease 1.2s forwards;
-            overflow: hidden;
-        }
-        #splash::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(240, 147, 251, 0.08) 0%, transparent 50%);
-            animation: splashFloat 8s ease-in-out infinite;
-            z-index: -1;
-        }
-        @keyframes splashFloat {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            33% { transform: rotate(120deg) scale(1.1); }
-            66% { transform: rotate(240deg) scale(0.9); }
-        }
-        #splash .logo {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            font-weight: bold;
-            color: white;
-            animation: zoomIn 1s ease;
-        }
-        #splash .title {
-            margin-top: 20px;
-            font-size: 32px;
-            font-weight: 600;
-            color: white;
-            animation: zoomIn 1s ease;
-        }
-        @keyframes zoomIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; visibility: hidden; }
-        }
-    </style>
+
 </head>
 
 <body>
-    <div id="splash">
-        <div class="logo">N</div>
-        <div class="title">Nexa AI</div>
-    </div>
     <div class="header">
         <div class="header-left">
             <h1>
-                <div class="logo" onclick="toggleModelSelector()" style="cursor: pointer;" title="Change Model">N</div> Nexa AI
+                <div class="logo" onclick="toggleModelSelector()" style="cursor: pointer;" title="Change Model">N</div>
+                Nexa AI
                 <span class="current-model" id="currentModelDisplay">DeepSeek-V3.1</span>
             </h1>
         </div>
@@ -97,7 +31,7 @@
         </nav>
         <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
     </div>
-    
+
     <div class="model-selector-modal" id="modelModal">
         <div class="model-selector-content">
             <h3>Select AI Model</h3>
@@ -126,30 +60,42 @@
             <button class="close-modal-btn" onclick="toggleModelSelector()">Close</button>
         </div>
     </div>
-    
+
     <div class="main-container">
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
         <div class="sidebar" id="sidebar">
             <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
 
             <div class="section" id="savedChatsSection" style="display: none;">
-                <div class="section-title">SAVED CHATS</div>
-                <input type="text" id="chatSearch" placeholder="Search chats..." oninput="searchChats()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px;">
+                <div class="section-title">
+                    SAVED CHATS
+                    <span onclick="toggleSearchInput()" style="cursor: pointer; float: right; font-size: 16px;"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    
+                    </span>
+                </div>
+                <input type="text" id="chatSearch" placeholder="Search chats..." oninput="searchChats()"
+                    style="display: none; width: 100%; padding: 10px; margin-bottom: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px;">
                 <div id="savedChatsList"></div>
             </div>
 
             <div class="section">
                 <div class="section-title">QUICK COMMANDS</div>
-                <button class="menu-item" onclick="sendCommand('news')"><span class="menu-icon">📰</span>News</button>
-                <button class="menu-item" onclick="sendCommand('joke')"><span class="menu-icon">😄</span>Joke</button>
-                <button class="menu-item" onclick="sendCommand('wikipedia AI')"><span class="menu-icon">📚</span>Wikipedia</button>
-                <button class="menu-item" onclick="sendCommand('list tasks')"><span
+                <button class="menu-item" onclick="sendMessage('news')"><span class="menu-icon">📰</span>News</button>
+                <button class="menu-item" onclick="sendMessage('joke')"><span class="menu-icon">😄</span>Joke</button>
+                <button class="menu-item" onclick="sendMessage('wikipedia AI')"><span
+                        class="menu-icon">📚</span>Wikipedia</button>
+                <button class="menu-item" onclick="sendMessage('list tasks')"><span
                         class="menu-icon">📝</span>Tasks</button>
             </div>
             <div class="section">
                 <div class="section-title">TASK MANAGER</div>
                 <button class="menu-item" onclick="addTaskPrompt()"><span class="menu-icon">➕</span>Add Task</button>
-                <button class="menu-item" onclick="sendCommand('list tasks')"><span class="menu-icon">📋</span>List
+                <button class="menu-item" onclick="sendMessage('list tasks')"><span class="menu-icon">📋</span>List
                     Tasks</button>
                 <button class="menu-item" onclick="removeTaskPrompt()"><span class="menu-icon">➖</span>Remove
                     Task</button>
@@ -161,6 +107,9 @@
                     <div class="welcome-logo">N</div>
                     <h1 class="welcome-title">Welcome to Nexa AI</h1>
                     <p class="welcome-subtitle">Your intelligent AI assistant ready to help with anything</p>
+                    <p class="memory-indicator" id="memoryIndicator" style="margin-top: 15px; font-size: 13px; color: #667eea; display: none;">
+                        💾 <span id="memoryCount">0</span> preferences remembered
+                    </p>
                 </div>
             </div>
             <div class="chat-box" id="chatBox"></div>
@@ -173,7 +122,13 @@
                             onkeypress="if(event.key==='Enter') sendMessage()">
                         <button class="icon-btn speaker-btn" id="speakerBtn" onclick="toggleSpeaker()"
                             title="Toggle voice output">🔊</button>
-                        <button class="send-btn" onclick="sendMessage()" title="Send message">↑</button>
+                        <button class="send-btn" onclick="sendMessage()" title="Send message"><svg
+                                xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg></button>
                     </div>
                 </div>
             </div>
@@ -182,10 +137,15 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         setTimeout(() => document.getElementById('splash').remove(), 1200);
-    
-    // Show welcome screen by default
-    document.getElementById('welcomeScreen').style.display = 'flex';
-    document.getElementById('chatBox').style.display = 'none';
+
+        // Show welcome screen by default
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        document.getElementById('chatBox').style.display = 'none';
+        
+        // Update memory indicator on load
+        if (typeof updateMemoryIndicator === 'function') {
+            updateMemoryIndicator();
+        }
     </script>
 </body>
 

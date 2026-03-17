@@ -5,6 +5,7 @@ let currentModel = localStorage.getItem('currentModel') || 'DeepSeek-V3.1';
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
 let currentChatId = parseInt(localStorage.getItem('currentChatId')) || 0;
+let activeChatId = parseInt(localStorage.getItem('activeChatId')) || null;
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
 let memory = JSON.parse(localStorage.getItem('nexaMemory')) || [];
 
@@ -140,21 +141,47 @@ function newChat() {
     // Save current chat if it has messages
     if (chatHistory.length > 0) {
         const firstUserMsg = chatHistory.find(m => m.role === 'user')?.content.substring(0, 30) || 'New Chat';
-        savedChats.push({
-            id: currentChatId++,
-            title: firstUserMsg,
-            history: [...chatHistory]
-        });
+        
+        const chatIndex = savedChats.findIndex(c => c.id === activeChatId);
+        if (chatIndex !== -1) {
+            // Update existing chat
+            savedChats[chatIndex].history = [...chatHistory];
+        } else {
+            // Create new chat
+            savedChats.push({
+                id: activeChatId !== null ? activeChatId : currentChatId,
+                title: firstUserMsg,
+                history: [...chatHistory]
+            });
+            if (activeChatId === null) {
+                currentChatId++;
+                localStorage.setItem('currentChatId', currentChatId);
+            }
+        }
         localStorage.setItem('savedChats', JSON.stringify(savedChats));
-        localStorage.setItem('currentChatId', currentChatId);
     }
     
+    // Reset for new chat (but keep memory and tasks)
+    activeChatId = null;
     chatHistory = [];
+    localStorage.setItem('activeChatId', activeChatId);
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
     document.getElementById('chatBox').innerHTML = '';
     document.getElementById('chatBox').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'flex';
+    updateMemoryIndicator();
     loadSavedChats();
+}
+
+function updateMemoryIndicator() {
+    const indicator = document.getElementById('memoryIndicator');
+    const count = document.getElementById('memoryCount');
+    if (memory.length > 0) {
+        count.textContent = memory.length;
+        indicator.style.display = 'block';
+    } else {
+        indicator.style.display = 'none';
+    }
 }
 
 async function loadSavedChats() {
@@ -165,22 +192,37 @@ async function loadSavedChats() {
         section.style.display = 'block';
         chatsList.innerHTML = '';
         [...savedChats].reverse().forEach(chat => {
-            const btn = document.createElement('button');
-            btn.className = 'menu-item chat-item';
-            btn.innerHTML = `
-                <span class="menu-icon">💬</span>
-                <span style="flex: 1; text-align: left;">${chat.title}</span>
-                <span onclick="deleteChat(${chat.id}, event)" style="color: #ef4444; cursor: pointer; padding: 0 8px;" title="Delete">🗑️</span>
-            `;
-            btn.onclick = (e) => {
-                if (!e.target.closest('span[onclick*="deleteChat"]')) {
-                    loadChat(chat.id);
-                }
-            };
-            chatsList.appendChild(btn);
+            chatsList.appendChild(createChatButton(chat));
         });
     } else {
         section.style.display = 'none';
+    }
+}
+
+function toggleSearchInput() {
+    const searchInput = document.getElementById('chatSearch');
+    if (searchInput.style.display === 'none') {
+        searchInput.style.display = 'block';
+        searchInput.focus();
+        setTimeout(() => {
+            document.addEventListener('click', hideSearchOnClickOutside);
+        }, 0);
+    } else {
+        searchInput.style.display = 'none';
+        searchInput.value = '';
+        loadSavedChats();
+        document.removeEventListener('click', hideSearchOnClickOutside);
+    }
+}
+
+function hideSearchOnClickOutside(e) {
+    const searchInput = document.getElementById('chatSearch');
+    const section = document.getElementById('savedChatsSection');
+    if (!section.contains(e.target)) {
+        searchInput.style.display = 'none';
+        searchInput.value = '';
+        loadSavedChats();
+        document.removeEventListener('click', hideSearchOnClickOutside);
     }
 }
 
@@ -188,24 +230,45 @@ function searchChats() {
     const query = document.getElementById('chatSearch').value.toLowerCase();
     const chatsList = document.getElementById('savedChatsList');
     
-    chatsList.innerHTML = '';
+    if (query === '') {
+        loadSavedChats();
+        return;
+    }
+    
     const filtered = savedChats.filter(chat => chat.title.toLowerCase().includes(query));
     
+    chatsList.innerHTML = '';
     [...filtered].reverse().forEach(chat => {
-        const btn = document.createElement('button');
-        btn.className = 'menu-item chat-item';
-        btn.innerHTML = `
-            <span class="menu-icon">💬</span>
-            <span style="flex: 1; text-align: left;">${chat.title}</span>
-            <span onclick="deleteChat(${chat.id}, event)" style="color: #ef4444; cursor: pointer; padding: 0 8px;" title="Delete">🗑️</span>
-        `;
-        btn.onclick = (e) => {
-            if (!e.target.closest('span[onclick*="deleteChat"]')) {
-                loadChat(chat.id);
-            }
-        };
-        chatsList.appendChild(btn);
+        chatsList.appendChild(createChatButton(chat));
     });
+}
+
+function createChatButton(chat) {
+    const btn = document.createElement('button');
+    btn.className = 'menu-item chat-item';
+    btn.style.position = 'relative';
+    btn.innerHTML = `
+        <span class="chat-title-text">${chat.title}</span>
+        <span class="chat-menu-btn" onclick="event.stopPropagation(); toggleChatMenu(${chat.id}, event)">⋮</span>
+    `;
+    
+    const menu = document.createElement('div');
+    menu.className = 'chat-menu';
+    menu.id = `chatMenu${chat.id}`;
+    menu.innerHTML = `
+        <div onclick="renameChat(${chat.id}, event)">Rename</div>
+        <div onclick="pinChat(${chat.id}, event)">Pin</div>
+        <div onclick="shareChat(${chat.id}, event)">Share</div>
+        <div onclick="deleteChat(${chat.id}, event)">Delete</div>
+    `;
+    btn.appendChild(menu);
+    
+    btn.onclick = (e) => {
+        if (!e.target.closest('.chat-menu-btn') && !e.target.closest('.chat-menu')) {
+            loadChat(chat.id);
+        }
+    };
+    return btn;
 }
 
 function deleteChat(chatId, event) {
@@ -217,10 +280,75 @@ function deleteChat(chatId, event) {
     }
 }
 
+function toggleChatMenu(chatId, event) {
+    event.stopPropagation();
+    const menu = document.getElementById(`chatMenu${chatId}`);
+    console.log('Menu element:', menu, 'ID:', `chatMenu${chatId}`);
+    if (!menu) return;
+    const allMenus = document.querySelectorAll('.chat-menu');
+    allMenus.forEach(m => {
+        if (m.id !== `chatMenu${chatId}`) m.style.display = 'none';
+    });
+    const currentDisplay = window.getComputedStyle(menu).display;
+    menu.style.display = currentDisplay === 'none' ? 'block' : 'none';
+    console.log('Menu display set to:', menu.style.display);
+    
+    if (menu.style.display === 'block') {
+        setTimeout(() => {
+            document.addEventListener('click', hideChatMenus);
+        }, 0);
+    }
+}
+
+function hideChatMenus() {
+    const allMenus = document.querySelectorAll('.chat-menu');
+    allMenus.forEach(m => m.style.display = 'none');
+    document.removeEventListener('click', hideChatMenus);
+}
+
+function renameChat(chatId, event) {
+    event.stopPropagation();
+    const chat = savedChats.find(c => c.id === chatId);
+    if (chat) {
+        const newTitle = prompt('Enter new title:', chat.title);
+        if (newTitle && newTitle.trim()) {
+            chat.title = newTitle.trim();
+            localStorage.setItem('savedChats', JSON.stringify(savedChats));
+            loadSavedChats();
+        }
+    }
+}
+
+function pinChat(chatId, event) {
+    event.stopPropagation();
+    const chat = savedChats.find(c => c.id === chatId);
+    if (chat) {
+        chat.pinned = !chat.pinned;
+        localStorage.setItem('savedChats', JSON.stringify(savedChats));
+        loadSavedChats();
+    }
+}
+
+function shareChat(chatId, event) {
+    event.stopPropagation();
+    const chat = savedChats.find(c => c.id === chatId);
+    if (chat) {
+        const chatText = chat.history.map(m => `${m.role}: ${m.content}`).join('\n\n');
+        if (navigator.share) {
+            navigator.share({ text: chatText, title: chat.title });
+        } else {
+            navigator.clipboard.writeText(chatText);
+            alert('Chat copied to clipboard!');
+        }
+    }
+}
+
 async function loadChat(chatId) {
     const chat = savedChats.find(c => c.id === chatId);
     if (chat) {
+        activeChatId = chatId;
         chatHistory = [...chat.history];
+        localStorage.setItem('activeChatId', activeChatId);
         localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
         document.getElementById('chatBox').innerHTML = '';
         document.getElementById('welcomeScreen').style.display = 'none';
@@ -237,23 +365,14 @@ async function loadChat(chatId) {
 function addTaskPrompt() {
     const task = prompt('Enter task to add:');
     if (task) {
-        tasks.push(task);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        addMessage(`Task added: ${task}`, 'assistant');
+        sendMessage(`add task ${task}`);
     }
 }
 
 function removeTaskPrompt() {
     const task = prompt('Enter task to remove:');
     if (task) {
-        const index = tasks.indexOf(task);
-        if (index > -1) {
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            addMessage(`Task removed: ${task}`, 'assistant');
-        } else {
-            addMessage('Task not found', 'assistant');
-        }
+        sendMessage(`remove task ${task}`);
     }
 }
 
@@ -273,18 +392,42 @@ function addMessage(text, type, shouldSpeak = true) {
         msg.innerHTML = `
             <div class="message-content"><strong>Nexa AI:</strong><br>${formattedText}</div>
             <div class="message-actions">
-                <button onclick="copyMessage(this)" title="Copy">📋</button>
-                <button onclick="likeMessage(this)" title="Like">👍</button>
-                <button onclick="dislikeMessage(this)" title="Dislike">👎</button>
-                <button onclick="shareMessage(this)" title="Share">📤</button>
-                <button onclick="regenerateMessage(this)" title="Regenerate">🔄</button>
+                <button onclick="copyMessage(this)"title="Copy"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+</button>
+                <button onclick="likeMessage(this)" title="Like"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+</svg>
+</button>
+                <button onclick="dislikeMessage(this)" title="Dislike"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
+</svg>
+</button>
+                <button onclick="shareMessage(this)" title="Share"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+  <polyline points="16 6 12 2 8 6"></polyline>
+  <line x1="12" y1="2" x2="12" y2="15"></line>
+</svg>
+</button>
+                <button onclick="regenerateMessage(this)" title="Regenerate"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M23 4v6h-6"></path>
+  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+</svg>
+</button>
             </div>
         `;
     } else {
         msg.innerHTML = `
-            <div class="message-content">${formattedText}</div>
             <div class="message-actions user-actions">
-                <button onclick="editMessage(this)" title="Edit">✏️</button>
+                <button onclick="editMessage(this)" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+</svg>
+</button>
+            </div>
+            <div class="message-content">${formattedText}</div>
             </div>
         `;
     }
@@ -378,7 +521,7 @@ function regenerateMessage(btn) {
 }
 
 function editMessage(btn) {
-    const messageContent = btn.parentElement.previousElementSibling;
+    const messageContent = btn.parentElement.nextElementSibling;
     const currentText = messageContent.innerText;
     
     // Create input field
@@ -462,10 +605,18 @@ async function sendMessage(query = null) {
         chatBox.style.display = 'block';
     }
 
+    // Assign new chat ID if starting fresh chat
+    if (activeChatId === null && chatHistory.length === 0) {
+        activeChatId = currentChatId;
+        currentChatId++;
+        localStorage.setItem('activeChatId', activeChatId);
+        localStorage.setItem('currentChatId', currentChatId);
+    }
+
     addMessage(query, 'user');
     chatHistory.push({ role: 'user', content: query });
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    input.value = '';
+    if (input) input.value = '';
     
     const queryLower = query.toLowerCase();
     
@@ -550,21 +701,17 @@ async function sendMessage(query = null) {
         chatHistory.push({ role: 'assistant', content: data.response });
         localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
         
-        const responseMsg = document.createElement('div');
-        responseMsg.className = 'message assistant';
-        responseMsg.style.marginTop = '0px';
-        responseMsg.innerHTML = `
-            <div class="message-content"><strong>Nexa AI:</strong><br>${data.response.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, '<br>')}</div>
-            <div class="message-actions">
-                <button onclick="copyMessage(this)" title="Copy">📋</button>
-                <button onclick="likeMessage(this)" title="Like">👍</button>
-                <button onclick="dislikeMessage(this)" title="Dislike">👎</button>
-                <button onclick="shareMessage(this)" title="Share">📤</button>
-                <button onclick="regenerateMessage(this)" title="Regenerate">🔄</button>
-            </div>
-        `;
-        document.getElementById('chatBox').appendChild(responseMsg);
-        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+        // Update memory and tasks from backend
+        if (data.memory) {
+            memory = data.memory;
+            localStorage.setItem('nexaMemory', JSON.stringify(memory));
+        }
+        if (data.tasks) {
+            tasks = data.tasks;
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        
+        addMessage(data.response, 'assistant');
         
         if (data.response) {
             speak(data.response);

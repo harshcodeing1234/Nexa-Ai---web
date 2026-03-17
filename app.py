@@ -1,6 +1,5 @@
 # import packages
 import os
-import datetime
 import wikipedia #type:ignore
 import requests #type:ignore
 from openai import OpenAI #type:ignore
@@ -14,7 +13,7 @@ from flask_cors import CORS #type:ignore
 from flask_limiter import Limiter #type:ignore
 from flask_limiter.util import get_remote_address #type:ignore
 
-os.environ['DISPLAY'] = ':0'
+
 
 # Setup logging
 os.makedirs('logs', exist_ok=True)
@@ -70,7 +69,7 @@ def chat(query, history=[], memory=[]):
         
         # Add memory context if available
         if memory:
-            memory_context = "What I remember about you: " + "; ".join(memory)
+            memory_context = "User preferences and information: " + "; ".join(memory[-10:])  # Use last 10 items
             messages.append({"role": "system", "content": memory_context})
         
         messages.extend(history[-10:])  # Last 10 messages for context
@@ -95,11 +94,13 @@ def index():
 @app.route('/chat', methods=['POST'])
 @limiter.limit("30 per minute")
 def chat_endpoint():
+    global tasks
     try:
         query = sanitize_input(request.json.get('query', ''))
         history = request.json.get('history', [])
         frontend_tasks = request.json.get('tasks', [])
         memory = request.json.get('memory', [])
+        tasks = frontend_tasks  # Sync backend with frontend
         query_lower = query.lower()
         
         logger.info(f"Chat request: {query[:50]}...")
@@ -111,11 +112,11 @@ def chat_endpoint():
                 try:
                     result = wikipedia.summary(topic, sentences=2)
                     logger.info(f"Wikipedia search: {topic}")
-                    return jsonify({'response': result})
+                    return jsonify({'response': result, 'memory': memory, 'tasks': tasks})
                 except Exception as e:
                     logger.error(f"Wikipedia error: {str(e)}")
-                    return jsonify({'response': f'Could not find information about {topic}'})
-            return jsonify({'response': 'Please specify a topic'})
+                    return jsonify({'response': f'Could not find information about {topic}', 'memory': memory, 'tasks': tasks})
+            return jsonify({'response': 'Please specify a topic', 'memory': memory, 'tasks': tasks})
         
         # News
         elif "news" in query_lower:
@@ -125,53 +126,59 @@ def chat_endpoint():
                 articles = response.json()['articles'][:5]
                 news_list = [f"{i+1}. {article['title']}" for i, article in enumerate(articles)]
                 logger.info("News fetched successfully")
-                return jsonify({'response': 'Top 5 News:\n\n' + '\n\n'.join(news_list)})
+                return jsonify({'response': 'Top 5 News:\n\n' + '\n\n'.join(news_list), 'memory': memory, 'tasks': tasks})
             except Exception as e:
                 logger.error(f"News fetch error: {str(e)}")
-                return jsonify({'response': 'Unable to fetch news'})
+                return jsonify({'response': 'Unable to fetch news', 'memory': memory, 'tasks': tasks})
         
         # Joke
         elif "joke" in query_lower:
             try:
                 response = requests.get("https://official-joke-api.appspot.com/random_joke", timeout=5)
                 joke_data = response.json()
-                return jsonify({'response': f"{joke_data['setup']}\n\n{joke_data['punchline']}"})
+                return jsonify({'response': f"{joke_data['setup']}\n\n{joke_data['punchline']}", 'memory': memory, 'tasks': tasks})
             except:
                 import random
                 jokes = [
                     "Why do programmers prefer dark mode? Because light attracts bugs!",
                     "Why did the developer go broke? Because he used up all his cache!"
                 ]
-                return jsonify({'response': random.choice(jokes)})
+                return jsonify({'response': random.choice(jokes), 'memory': memory, 'tasks': tasks})
         
         # Tasks
         elif any(word in query_lower for word in ['list tasks', 'show tasks', 'tasks', 'task']):
-            if len(frontend_tasks) > 0:
-                task_list = '\n'.join([f"{i+1}. {task}" for i, task in enumerate(frontend_tasks)])
-                return jsonify({'response': f'Your tasks:\n\n{task_list}'})
+            if len(tasks) > 0:
+                task_list = '\n'.join([f"{i+1}. {task}" for i, task in enumerate(tasks)])
+                return jsonify({'response': f'Your tasks:\n\n{task_list}', 'memory': memory, 'tasks': tasks})
             else:
-                return jsonify({'response': 'No tasks found'})
+                return jsonify({'response': 'No tasks found', 'memory': memory, 'tasks': tasks})
         
         elif 'add task' in query_lower:
             task = query.replace('add task', '').strip()
             if task:
                 tasks.append(task)
                 logger.info(f"Task added: {task}")
-                return jsonify({'response': f'Task added: {task}'})
-            return jsonify({'response': 'Please specify a task to add'})
+                return jsonify({'response': f'Task added: {task}', 'memory': memory, 'tasks': tasks})
+            return jsonify({'response': 'Please specify a task to add', 'memory': memory, 'tasks': tasks})
         
         elif 'remove task' in query_lower:
             task = query.replace('remove task', '').strip()
             if task in tasks:
                 tasks.remove(task)
                 logger.info(f"Task removed: {task}")
-                return jsonify({'response': f'Task removed: {task}'})
-            return jsonify({'response': 'Task not found'})
+                return jsonify({'response': f'Task removed: {task}', 'memory': memory, 'tasks': tasks})
+            return jsonify({'response': 'Task not found', 'memory': memory, 'tasks': tasks})
         
         # Default: AI chat
         else:
             response = chat(query, history, memory)
-            return jsonify({'response': response})
+            
+            # Extract and persist memory
+            if any(phrase in query_lower for phrase in ["my name is", "i am", "i'm", "i like", "i love", "i hate", "i work", "i live", "i prefer", "call me"]):
+                memory.append(query)
+                memory = memory[-15:]  # Keep last 15 memory items
+            
+            return jsonify({'response': response, 'memory': memory, 'tasks': tasks})
     
     except Exception as e:
         logger.error(f"Chat endpoint error: {str(e)}")
@@ -197,6 +204,7 @@ def command():
 @limiter.limit("60 per minute")
 def get_saved_chats():
     try:
+        # Return empty list - chats are managed client-side in localStorage
         return jsonify({'chats': []})
     except Exception as e:
         logger.error(f"Error fetching saved chats: {str(e)}")
@@ -206,6 +214,7 @@ def get_saved_chats():
 @limiter.limit("30 per minute")
 def load_chat(chat_id):
     try:
+        # Return success - chat loading is handled client-side
         return jsonify({'response': 'Chat loaded', 'history': []}), 200
     except Exception as e:
         logger.error(f"Error loading chat: {str(e)}")
