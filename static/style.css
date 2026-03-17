@@ -1,6 +1,7 @@
 html, body {
     height: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 * {
@@ -13,11 +14,14 @@ body {
     background: #0a0a0f;
     color: #e3e3e3;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 body::before {
     content: '';
@@ -120,6 +124,8 @@ body::before {
     font-weight: bold;
     color: white;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    line-height: 1;
+    font-size: 18px;
 }
 @keyframes glow {
     0%, 100% { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
@@ -368,7 +374,7 @@ body::before {
     color: white;
     padding: 12px 18px;
     border-radius: 25px;
-    max-width: 70%;
+    max-width: 60%;
     font-size: 15px;
     line-height: 1.5;
     word-wrap: break-word;
@@ -377,7 +383,7 @@ body::before {
     background: transparent;
     color: #e5e7eb;
     padding: 8px 0;
-    max-width: 85%;
+    max-width: 90%;
     font-size: 15px;
     line-height: 1.7;
     word-wrap: break-word;

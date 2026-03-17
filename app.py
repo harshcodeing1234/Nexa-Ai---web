@@ -1,4 +1,4 @@
-# import packages
+# import package
 import os
 import datetime
 import wikipedia #type:ignore
@@ -63,10 +63,16 @@ def sanitize_input(text, max_length=500):
     sanitized = re.sub(r'[<>{}[\]\\]', '', text)
     return sanitized.strip()
 
-def chat(query, history=[]):
+def chat(query, history=[], memory=[]):
     global current_model
     try:
         messages = [{"role": "system", "content": "You are Nexa, a professional AI assistant. Always reply in plain text. Do NOT use emojis. Do NOT use symbols. Keep responses clean, short and formal."}]
+        
+        # Add memory context if available
+        if memory:
+            memory_context = "What I remember about you: " + "; ".join(memory)
+            messages.append({"role": "system", "content": memory_context})
+        
         messages.extend(history[-10:])  # Last 10 messages for context
         messages.append({"role": "user", "content": query})
         
@@ -92,6 +98,8 @@ def chat_endpoint():
     try:
         query = sanitize_input(request.json.get('query', ''))
         history = request.json.get('history', [])
+        frontend_tasks = request.json.get('tasks', [])
+        memory = request.json.get('memory', [])
         query_lower = query.lower()
         
         logger.info(f"Chat request: {query[:50]}...")
@@ -136,9 +144,33 @@ def chat_endpoint():
                 ]
                 return jsonify({'response': random.choice(jokes)})
         
+        # Tasks
+        elif any(word in query_lower for word in ['list tasks', 'show tasks', 'tasks', 'task']):
+            if len(frontend_tasks) > 0:
+                task_list = '\n'.join([f"{i+1}. {task}" for i, task in enumerate(frontend_tasks)])
+                return jsonify({'response': f'Your tasks:\n\n{task_list}'})
+            else:
+                return jsonify({'response': 'No tasks found'})
+        
+        elif 'add task' in query_lower:
+            task = query.replace('add task', '').strip()
+            if task:
+                tasks.append(task)
+                logger.info(f"Task added: {task}")
+                return jsonify({'response': f'Task added: {task}'})
+            return jsonify({'response': 'Please specify a task to add'})
+        
+        elif 'remove task' in query_lower:
+            task = query.replace('remove task', '').strip()
+            if task in tasks:
+                tasks.remove(task)
+                logger.info(f"Task removed: {task}")
+                return jsonify({'response': f'Task removed: {task}'})
+            return jsonify({'response': 'Task not found'})
+        
         # Default: AI chat
         else:
-            response = chat(query, history)
+            response = chat(query, history, memory)
             return jsonify({'response': response})
     
     except Exception as e:

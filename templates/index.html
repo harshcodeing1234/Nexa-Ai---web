@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#2d1b69">
     <title>Nexa AI</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/x-icon">
@@ -15,6 +15,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             background: linear-gradient(135deg, #000000 0%, #0a0a0f 50%, #050505 100%);
             display: flex;
             flex-direction: column;
@@ -23,6 +24,8 @@
             z-index: 9999;
             animation: fadeOut 0.5s ease 1.5s forwards;
             overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         #splash::before {
             content: '';
@@ -177,7 +180,7 @@
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
-        setTimeout(() => document.getElementById('splash').remove(), 2000);
+        setTimeout(() => document.getElementById('splash').remove(), 1500);
     
     // Show welcome screen by default
     document.getElementById('welcomeScreen').style.display = 'flex';

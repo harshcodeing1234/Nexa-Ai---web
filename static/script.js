@@ -6,6 +6,7 @@ let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
 let currentChatId = parseInt(localStorage.getItem('currentChatId')) || 0;
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+let memory = JSON.parse(localStorage.getItem('nexaMemory')) || [];
 
 function toggleModelSelector() {
     const modal = document.getElementById('modelModal');
@@ -501,10 +502,34 @@ async function sendMessage(query = null) {
         return;
     }
     
-    if (queryLower.includes('list tasks') || queryLower.includes('show tasks')) {
+    if (queryLower.includes('list tasks') || queryLower.includes('show tasks') || queryLower === 'tasks' || queryLower === 'task') {
         const response = tasks.length > 0 
             ? 'Your tasks:\n\n' + tasks.map((t, i) => `${i+1}. ${t}`).join('\n')
-            : 'No tasks';
+            : 'No tasks found';
+        chatHistory.push({ role: 'assistant', content: response });
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        addMessage(response, 'assistant');
+        return;
+    }
+    
+    // Memory commands
+    if (queryLower.includes('save this in memory') || queryLower.includes('remember this')) {
+        const info = query.replace(/save this in memory|remember this/i, '').trim();
+        if (info) {
+            memory.push(info);
+            localStorage.setItem('nexaMemory', JSON.stringify(memory));
+            const response = `Saved to memory: ${info}`;
+            chatHistory.push({ role: 'assistant', content: response });
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            addMessage(response, 'assistant');
+            return;
+        }
+    }
+    
+    if (queryLower.includes('show memory') || queryLower.includes('what do you remember')) {
+        const response = memory.length > 0 
+            ? 'I remember:\n\n' + memory.map((m, i) => `${i+1}. ${m}`).join('\n')
+            : 'No memories saved';
         chatHistory.push({ role: 'assistant', content: response });
         localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
         addMessage(response, 'assistant');
@@ -517,7 +542,7 @@ async function sendMessage(query = null) {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, history: chatHistory })
+            body: JSON.stringify({ query, history: chatHistory, tasks: tasks, memory: memory })
         });
         const data = await response.json();
         hideThinking();
@@ -563,7 +588,7 @@ async function sendCommand(cmd) {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: cmd, history: chatHistory })
+            body: JSON.stringify({ query: cmd, history: chatHistory, tasks: tasks })
         });
         const data = await response.json();
         addMessage(data.response, 'assistant');

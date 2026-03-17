@@ -4,9 +4,10 @@
   "description": "Cloud-ready AI chatbot with conversational AI and information retrieval capabilities",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f061a",
-  "theme_color": "#120720",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
   "orientation": "portrait-primary",
+  "splash_pages": null,
   "icons": [
   {
     "src": "/static/images/icon 192.png",
