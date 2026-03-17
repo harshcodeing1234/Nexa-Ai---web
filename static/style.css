@@ -2,6 +2,8 @@ html, body {
     height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
+    margin: 0;
+    padding: 0;
 }
 
 * {
@@ -20,8 +22,7 @@ body {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
 }
 body::before {
     content: '';
