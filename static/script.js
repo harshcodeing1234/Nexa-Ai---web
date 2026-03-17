@@ -1,7 +1,11 @@
 let speakerEnabled = true;
 let recognition;
 let synth = window.speechSynthesis;
-let currentModel = 'DeepSeek-V3.1';
+let currentModel = localStorage.getItem('currentModel') || 'DeepSeek-V3.1';
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let savedChats = JSON.parse(localStorage.getItem('savedChats')) || [];
+let currentChatId = parseInt(localStorage.getItem('currentChatId')) || 0;
+let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
 
 function toggleModelSelector() {
     const modal = document.getElementById('modelModal');
@@ -27,6 +31,7 @@ function updateSelectedModel() {
 
 async function selectModel(model) {
     currentModel = model;
+    localStorage.setItem('currentModel', model);
     try {
         await fetch('/set_model', {
             method: 'POST',
@@ -131,77 +136,127 @@ function toggleSidebar() {
 }
 
 function newChat() {
-    fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: 'new chat' })
-    }).then(res => res.json()).then(data => {
-        document.getElementById('chatBox').innerHTML = '';
-        document.getElementById('chatBox').style.display = 'none';
-        document.getElementById('welcomeScreen').style.display = 'flex';
-        setTimeout(loadSavedChats, 300);
-    });
+    // Save current chat if it has messages
+    if (chatHistory.length > 0) {
+        const firstUserMsg = chatHistory.find(m => m.role === 'user')?.content.substring(0, 30) || 'New Chat';
+        savedChats.push({
+            id: currentChatId++,
+            title: firstUserMsg,
+            history: [...chatHistory]
+        });
+        localStorage.setItem('savedChats', JSON.stringify(savedChats));
+        localStorage.setItem('currentChatId', currentChatId);
+    }
+    
+    chatHistory = [];
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    document.getElementById('chatBox').innerHTML = '';
+    document.getElementById('chatBox').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    loadSavedChats();
 }
 
 async function loadSavedChats() {
-    try {
-        const response = await fetch('/saved_chats');
-        const data = await response.json();
-        const chatsList = document.getElementById('savedChatsList');
-        const section = document.getElementById('savedChatsSection');
+    const chatsList = document.getElementById('savedChatsList');
+    const section = document.getElementById('savedChatsSection');
 
-        if (data.chats && data.chats.length > 0) {
-            section.style.display = 'block';
-            chatsList.innerHTML = '';
-            const chatsToShow = [...data.chats].reverse();
-            chatsToShow.forEach(chat => {
-                const btn = document.createElement('button');
-                btn.className = 'menu-item chat-item';
-                btn.innerHTML = `<span class="menu-icon">💬</span>${chat.title}`;
-                btn.onclick = () => loadChat(chat.id);
-                chatsList.appendChild(btn);
-            });
-        } else {
-            section.style.display = 'none';
-        }
-    } catch (e) {
-        addMessage('Failed to load saved chats', 'assistant');
+    if (savedChats.length > 0) {
+        section.style.display = 'block';
+        chatsList.innerHTML = '';
+        [...savedChats].reverse().forEach(chat => {
+            const btn = document.createElement('button');
+            btn.className = 'menu-item chat-item';
+            btn.innerHTML = `
+                <span class="menu-icon">💬</span>
+                <span style="flex: 1; text-align: left;">${chat.title}</span>
+                <span onclick="deleteChat(${chat.id}, event)" style="color: #ef4444; cursor: pointer; padding: 0 8px;" title="Delete">🗑️</span>
+            `;
+            btn.onclick = (e) => {
+                if (!e.target.closest('span[onclick*="deleteChat"]')) {
+                    loadChat(chat.id);
+                }
+            };
+            chatsList.appendChild(btn);
+        });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function searchChats() {
+    const query = document.getElementById('chatSearch').value.toLowerCase();
+    const chatsList = document.getElementById('savedChatsList');
+    
+    chatsList.innerHTML = '';
+    const filtered = savedChats.filter(chat => chat.title.toLowerCase().includes(query));
+    
+    [...filtered].reverse().forEach(chat => {
+        const btn = document.createElement('button');
+        btn.className = 'menu-item chat-item';
+        btn.innerHTML = `
+            <span class="menu-icon">💬</span>
+            <span style="flex: 1; text-align: left;">${chat.title}</span>
+            <span onclick="deleteChat(${chat.id}, event)" style="color: #ef4444; cursor: pointer; padding: 0 8px;" title="Delete">🗑️</span>
+        `;
+        btn.onclick = (e) => {
+            if (!e.target.closest('span[onclick*="deleteChat"]')) {
+                loadChat(chat.id);
+            }
+        };
+        chatsList.appendChild(btn);
+    });
+}
+
+function deleteChat(chatId, event) {
+    event.stopPropagation();
+    if (confirm('Delete this chat?')) {
+        savedChats = savedChats.filter(c => c.id !== chatId);
+        localStorage.setItem('savedChats', JSON.stringify(savedChats));
+        loadSavedChats();
     }
 }
 
 async function loadChat(chatId) {
-    try {
-        const response = await fetch(`/load_chat/${chatId}`, { method: 'POST' });
-        const data = await response.json();
-
-        if (data.history) {
-            document.getElementById('chatBox').innerHTML = '';
-            data.history.forEach(msg => {
-                if (msg.role !== 'system') {
-                    addMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant');
-                }
-            });
-        }
-    } catch (e) {
-        addMessage('Failed to load chat history', 'assistant');
+    const chat = savedChats.find(c => c.id === chatId);
+    if (chat) {
+        chatHistory = [...chat.history];
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        document.getElementById('chatBox').innerHTML = '';
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('chatBox').style.display = 'block';
+        
+        chatHistory.forEach(msg => {
+            if (msg.role !== 'system') {
+                addMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant', false);
+            }
+        });
     }
 }
 
 function addTaskPrompt() {
     const task = prompt('Enter task to add:');
     if (task) {
-        sendCommand(`add task ${task}`);
+        tasks.push(task);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        addMessage(`Task added: ${task}`, 'assistant');
     }
 }
 
 function removeTaskPrompt() {
     const task = prompt('Enter task to remove:');
     if (task) {
-        sendCommand(`remove task ${task}`);
+        const index = tasks.indexOf(task);
+        if (index > -1) {
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            addMessage(`Task removed: ${task}`, 'assistant');
+        } else {
+            addMessage('Task not found', 'assistant');
+        }
     }
 }
 
-function addMessage(text, type) {
+function addMessage(text, type, shouldSpeak = true) {
     const chatBox = document.getElementById('chatBox');
     if (!chatBox) return;
     
@@ -236,7 +291,7 @@ function addMessage(text, type) {
     chatBox.appendChild(msg);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    if (type === 'assistant' && text) {
+    if (type === 'assistant' && text && shouldSpeak) {
         speak(text);
     }
 }
@@ -399,7 +454,6 @@ async function sendMessage(query = null) {
     query = query || input.value.trim();
     if (!query) return;
 
-    // Hide welcome screen and show chat if it's the first message
     const welcomeScreen = document.getElementById('welcomeScreen');
     const chatBox = document.getElementById('chatBox');
     if (welcomeScreen.style.display !== 'none') {
@@ -408,7 +462,54 @@ async function sendMessage(query = null) {
     }
 
     addMessage(query, 'user');
+    chatHistory.push({ role: 'user', content: query });
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
     input.value = '';
+    
+    const queryLower = query.toLowerCase();
+    
+    // Handle tasks locally
+    if (queryLower.includes('add task')) {
+        const task = query.replace(/add task/i, '').trim();
+        if (task) {
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            const response = `Task added: ${task}`;
+            chatHistory.push({ role: 'assistant', content: response });
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            addMessage(response, 'assistant');
+            return;
+        }
+    }
+    
+    if (queryLower.includes('remove task')) {
+        const task = query.replace(/remove task/i, '').trim();
+        const index = tasks.indexOf(task);
+        if (index > -1) {
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            const response = `Task removed: ${task}`;
+            chatHistory.push({ role: 'assistant', content: response });
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            addMessage(response, 'assistant');
+        } else {
+            const response = 'Task not found';
+            chatHistory.push({ role: 'assistant', content: response });
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            addMessage(response, 'assistant');
+        }
+        return;
+    }
+    
+    if (queryLower.includes('list tasks') || queryLower.includes('show tasks')) {
+        const response = tasks.length > 0 
+            ? 'Your tasks:\n\n' + tasks.map((t, i) => `${i+1}. ${t}`).join('\n')
+            : 'No tasks';
+        chatHistory.push({ role: 'assistant', content: response });
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        addMessage(response, 'assistant');
+        return;
+    }
     
     showThinking();
 
@@ -416,10 +517,14 @@ async function sendMessage(query = null) {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ query, history: chatHistory })
         });
         const data = await response.json();
         hideThinking();
+        
+        chatHistory.push({ role: 'assistant', content: data.response });
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        
         const responseMsg = document.createElement('div');
         responseMsg.className = 'message assistant';
         responseMsg.style.marginTop = '0px';
@@ -446,7 +551,6 @@ async function sendMessage(query = null) {
 }
 
 async function sendCommand(cmd) {
-    // Hide welcome screen and show chat
     const welcomeScreen = document.getElementById('welcomeScreen');
     const chatBox = document.getElementById('chatBox');
     if (welcomeScreen.style.display !== 'none') {
@@ -459,7 +563,7 @@ async function sendCommand(cmd) {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: cmd })
+            body: JSON.stringify({ query: cmd, history: chatHistory })
         });
         const data = await response.json();
         addMessage(data.response, 'assistant');
@@ -476,7 +580,24 @@ window.onload = function () {
         }
     }
 
+    // Load saved data
     loadSavedChats();
+    
+    // Restore current chat if exists
+    if (chatHistory.length > 0) {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('chatBox').style.display = 'block';
+        chatHistory.forEach(msg => {
+            if (msg.role !== 'system') {
+                addMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant', false);
+            }
+        });
+    }
+    
+    // Set current model display
+    if (document.getElementById('currentModelDisplay')) {
+        document.getElementById('currentModelDisplay').textContent = currentModel;
+    }
     
     // Close modal on outside click
     document.addEventListener('click', function(e) {

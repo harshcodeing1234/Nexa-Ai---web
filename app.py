@@ -1,4 +1,4 @@
-# import package
+# import packages
 import os
 import datetime
 import wikipedia #type:ignore
@@ -47,7 +47,6 @@ def set_security_headers(response):
 
 # chatting setup 
 client = OpenAI(api_key=api_key, base_url="https://api.sambanova.ai/v1")
-chat_history = [{"role": "system", "content": "You are Nexa, a professional AI assistant. Always reply in plain text. Do NOT use emojis. Do NOT use symbols. Keep responses clean, short and formal."}]
 tasks = []
 saved_chats = []
 current_chat_id = 0
@@ -64,13 +63,15 @@ def sanitize_input(text, max_length=500):
     sanitized = re.sub(r'[<>{}[\]\\]', '', text)
     return sanitized.strip()
 
-def chat(query):
-    global chat_history, current_model
+def chat(query, history=[]):
+    global current_model
     try:
-        chat_history.append({"role": "user", "content": query})
-        response = client.chat.completions.create(model=current_model, messages=chat_history, temperature=0.7)
+        messages = [{"role": "system", "content": "You are Nexa, a professional AI assistant. Always reply in plain text. Do NOT use emojis. Do NOT use symbols. Keep responses clean, short and formal."}]
+        messages.extend(history[-10:])  # Last 10 messages for context
+        messages.append({"role": "user", "content": query})
+        
+        response = client.chat.completions.create(model=current_model, messages=messages, temperature=0.7)
         reply = response.choices[0].message.content
-        chat_history.append({"role": "assistant", "content": reply})
         logger.info(f"Chat successful - Model: {current_model}")
         return reply
     except Exception as e:
@@ -90,6 +91,7 @@ def index():
 def chat_endpoint():
     try:
         query = sanitize_input(request.json.get('query', ''))
+        history = request.json.get('history', [])
         query_lower = query.lower()
         
         logger.info(f"Chat request: {query[:50]}...")
@@ -120,27 +122,6 @@ def chat_endpoint():
                 logger.error(f"News fetch error: {str(e)}")
                 return jsonify({'response': 'Unable to fetch news'})
         
-        # Tasks
-        elif "add task" in query_lower:
-            task = query_lower.replace("add task", "").strip()
-            if task:
-                tasks.append(task)
-                return jsonify({'response': f'Task added: {task}'})
-            return jsonify({'response': 'Please specify a task'})
-        
-        elif "remove task" in query_lower:
-            task = query_lower.replace("remove task", "").strip()
-            if task in tasks:
-                tasks.remove(task)
-                return jsonify({'response': f'Task removed: {task}'})
-            return jsonify({'response': 'Task not found'})
-        
-        elif "list tasks" in query_lower or "show tasks" in query_lower:
-            if tasks:
-                task_list = '\n'.join([f"{i+1}. {t}" for i, t in enumerate(tasks)])
-                return jsonify({'response': f'Your tasks:\n\n{task_list}'})
-            return jsonify({'response': 'No tasks'})
-        
         # Joke
         elif "joke" in query_lower:
             try:
@@ -155,42 +136,9 @@ def chat_endpoint():
                 ]
                 return jsonify({'response': random.choice(jokes)})
         
-        # Reset chat
-        elif "reset chat" in query_lower or "new chat" in query_lower:
-            global chat_history, saved_chats, current_chat_id
-            
-            # Save current chat if it has user messages (more than just system message)
-            if len(chat_history) > 1:
-                # Get first user message as title
-                first_user_msg = None
-                for msg in chat_history:
-                    if msg['role'] == 'user':
-                        first_user_msg = msg['content'][:30]
-                        break
-                
-                chat_title = first_user_msg if first_user_msg else "New Chat"
-                saved_chats.append({
-                    'id': current_chat_id,
-                    'title': chat_title,
-                    'history': chat_history.copy()
-                })
-                current_chat_id += 1
-                print(f"Chat saved: {chat_title}, Total chats: {len(saved_chats)}")
-            
-            # Reset to new chat
-            chat_history = [{"role": "system", "content": "You are Nexa, a professional AI assistant. Always reply in plain text. Do NOT use emojis. Do NOT use symbols. Keep responses clean, short and formal."}]
-            return jsonify({'response': 'New chat started. Previous chat saved.', 'saved': True})
-        
-        # Chat history
-        elif "chat history" in query_lower:
-            if len(chat_history) > 1:
-                history_text = '\n\n'.join([f"{msg['role'].upper()}: {msg['content']}" for msg in chat_history[1:]])
-                return jsonify({'response': f'Chat History:\n\n{history_text}'})
-            return jsonify({'response': 'No chat history yet'})
-        
         # Default: AI chat
         else:
-            response = chat(query)
+            response = chat(query, history)
             return jsonify({'response': response})
     
     except Exception as e:
@@ -202,32 +150,12 @@ def chat_endpoint():
 def command():
     try:
         query = sanitize_input(request.json.get('query', '')).lower()
+        history = request.json.get('history', [])
         
         logger.info(f"Command request: {query}")
         
-        if query.startswith("add task "):
-            task = query.replace("add task", "").strip()
-            if task:
-                tasks.append(task)
-                return jsonify({'response': f'Task added: {task}'})
-            return jsonify({'response': 'Please specify a task'})
-        
-        elif query.startswith("remove task "):
-            task = query.replace("remove task", "").strip()
-            if task in tasks:
-                tasks.remove(task)
-                return jsonify({'response': f'Task removed: {task}'})
-            return jsonify({'response': 'Task not found'})
-        
-        elif "list tasks" in query:
-            if tasks:
-                task_list = '\n'.join([f"{i+1}. {t}" for i, t in enumerate(tasks)])
-                return jsonify({'response': f'Your tasks:\n\n{task_list}'})
-            return jsonify({'response': 'No tasks'})
-        
-        else:
-            response = chat(query)
-            return jsonify({'response': response})
+        response = chat(query, history)
+        return jsonify({'response': response})
     
     except Exception as e:
         logger.error(f"Command endpoint error: {str(e)}")
@@ -237,7 +165,7 @@ def command():
 @limiter.limit("60 per minute")
 def get_saved_chats():
     try:
-        return jsonify({'chats': saved_chats})
+        return jsonify({'chats': []})
     except Exception as e:
         logger.error(f"Error fetching saved chats: {str(e)}")
         return jsonify({'chats': []}), 500
@@ -246,13 +174,7 @@ def get_saved_chats():
 @limiter.limit("30 per minute")
 def load_chat(chat_id):
     try:
-        global chat_history
-        for chat in saved_chats:
-            if chat['id'] == chat_id:
-                chat_history = chat['history'].copy()
-                logger.info(f"Chat loaded: {chat_id}")
-                return jsonify({'response': 'Chat loaded', 'history': chat_history})
-        return jsonify({'response': 'Chat not found'}), 404
+        return jsonify({'response': 'Chat loaded', 'history': []}), 200
     except Exception as e:
         logger.error(f"Error loading chat: {str(e)}")
         return jsonify({'response': 'Error loading chat'}), 500
