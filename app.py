@@ -1,4 +1,4 @@
-# import package
+# import packages
 import os
 import datetime
 import wikipedia #type:ignore
