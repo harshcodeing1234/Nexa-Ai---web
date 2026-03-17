@@ -5,13 +5,8 @@ let currentModel = 'DeepSeek-V3.1';
 
 function toggleModelSelector() {
     const modal = document.getElementById('modelModal');
-    console.log('Toggle modal:', modal);
-    if (!modal) {
-        console.error('Modal not found!');
-        return;
-    }
+    if (!modal) return;
     modal.classList.toggle('active');
-    console.log('Modal active:', modal.classList.contains('active'));
     if (modal.classList.contains('active')) {
         updateSelectedModel();
     }
@@ -40,9 +35,8 @@ async function selectModel(model) {
         });
         document.getElementById('currentModelDisplay').textContent = model;
         toggleModelSelector();
-        addMessage(`Model changed to ${model}`, 'assistant');
     } catch (e) {
-        addMessage('Error changing model', 'assistant');
+        addMessage('Failed to change model', 'assistant');
     }
 }
 
@@ -63,7 +57,6 @@ if ('webkitSpeechRecognition' in window) {
     };
 
     recognition.onerror = function (event) {
-        console.error('Speech recognition error:', event.error);
         document.getElementById('micBtn').classList.remove('listening');
     };
 }
@@ -74,8 +67,8 @@ function startVoice() {
             document.getElementById('micBtn').classList.add('listening');
             recognition.start();
         } catch (e) {
-            console.error('Error starting recognition:', e);
             document.getElementById('micBtn').classList.remove('listening');
+            addMessage('Voice recognition failed', 'assistant');
         }
     } else {
         addMessage('Voice recognition not supported in this browser', 'assistant');
@@ -143,10 +136,10 @@ function newChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: 'new chat' })
     }).then(res => res.json()).then(data => {
-        console.log('New chat response:', data);
         document.getElementById('chatBox').innerHTML = '';
+        document.getElementById('chatBox').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'flex';
         setTimeout(loadSavedChats, 300);
-        addMessage('Hello! I am Nexa AI Assistant. How can I help you today?', 'assistant');
     });
 }
 
@@ -154,7 +147,6 @@ async function loadSavedChats() {
     try {
         const response = await fetch('/saved_chats');
         const data = await response.json();
-        console.log('Saved chats:', data);
         const chatsList = document.getElementById('savedChatsList');
         const section = document.getElementById('savedChatsSection');
 
@@ -173,7 +165,7 @@ async function loadSavedChats() {
             section.style.display = 'none';
         }
     } catch (e) {
-        console.error('Error loading saved chats:', e);
+        addMessage('Failed to load saved chats', 'assistant');
     }
 }
 
@@ -191,7 +183,7 @@ async function loadChat(chatId) {
             });
         }
     } catch (e) {
-        console.error('Error loading chat:', e);
+        addMessage('Failed to load chat history', 'assistant');
     }
 }
 
@@ -211,6 +203,8 @@ function removeTaskPrompt() {
 
 function addMessage(text, type) {
     const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
+    
     const msg = document.createElement('div');
     msg.className = `message ${type}`;
 
@@ -219,10 +213,26 @@ function addMessage(text, type) {
     formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
     formattedText = formattedText.replace(/\n/g, '<br>');
 
-    msg.innerHTML = `
-        <div class="avatar">${type === 'user' ? 'U' : 'N'}</div>
-        <div class="message-content">${formattedText}</div>
-    `;
+    if (type === 'assistant') {
+        msg.innerHTML = `
+            <div class="message-content"><strong>Nexa AI:</strong><br>${formattedText}</div>
+            <div class="message-actions">
+                <button onclick="copyMessage(this)" title="Copy">📋</button>
+                <button onclick="likeMessage(this)" title="Like">👍</button>
+                <button onclick="dislikeMessage(this)" title="Dislike">👎</button>
+                <button onclick="shareMessage(this)" title="Share">📤</button>
+                <button onclick="regenerateMessage(this)" title="Regenerate">🔄</button>
+            </div>
+        `;
+    } else {
+        msg.innerHTML = `
+            <div class="message-content">${formattedText}</div>
+            <div class="message-actions user-actions">
+                <button onclick="editMessage(this)" title="Edit">✏️</button>
+            </div>
+        `;
+    }
+    
     chatBox.appendChild(msg);
     chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -231,13 +241,176 @@ function addMessage(text, type) {
     }
 }
 
-async function sendMessage() {
+function showThinking() {
+    const chatBox = document.getElementById('chatBox');
+    const thinking = document.createElement('div');
+    thinking.className = 'message assistant thinking-message';
+    thinking.innerHTML = '<div class="message-content">Nexa thinking...</div>';
+    thinking.id = 'thinking-indicator';
+    chatBox.appendChild(thinking);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function hideThinking() {
+    const thinking = document.getElementById('thinking-indicator');
+    if (thinking) thinking.remove();
+}
+
+function copyMessage(btn) {
+    const messageContent = btn.closest('.message').querySelector('.message-content');
+    const text = messageContent.innerText.replace('Nexa AI:', '').trim();
+    navigator.clipboard.writeText(text);
+}
+
+function likeMessage(btn) {
+    btn.style.color = '#10b981';
+}
+
+function dislikeMessage(btn) {
+    btn.style.color = '#ef4444';
+}
+
+function shareMessage(btn) {
+    const messageContent = btn.closest('.message').querySelector('.message-content');
+    const text = messageContent.innerText.replace('Nexa AI:', '').trim();
+    if (navigator.share) {
+        navigator.share({ text });
+    }
+}
+
+function regenerateMessage(btn) {
+    const messageDiv = btn.closest('.message');
+    const prevMessage = messageDiv.previousElementSibling;
+    
+    // Find the last user message
+    let userMessages = document.querySelectorAll('.message.user');
+    if (userMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1].querySelector('.message-content').innerText;
+        
+        // Show thinking indicator
+        if (prevMessage && prevMessage.id === 'thinking-indicator') {
+            prevMessage.querySelector('.message-content').textContent = 'Nexa thinking...';
+            prevMessage.classList.add('thinking-message');
+        } else {
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message assistant thinking-message';
+            thinkingDiv.innerHTML = '<div class="message-content">Nexa thinking...</div>';
+            thinkingDiv.id = 'thinking-indicator';
+            messageDiv.parentNode.insertBefore(thinkingDiv, messageDiv);
+        }
+        
+        // Get new response
+        fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: lastUserMessage })
+        }).then(res => res.json()).then(data => {
+            const thinking = document.getElementById('thinking-indicator');
+            if (thinking) thinking.remove();
+            
+            // Update existing response
+            messageDiv.querySelector('.message-content').innerHTML = 
+                '<strong>Nexa AI:</strong><br>' + data.response.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                          .replace(/`([^`]+)`/g, '<code>$1</code>')
+                          .replace(/\n/g, '<br>');
+            
+            if (data.response) {
+                speak(data.response);
+            }
+        });
+    }
+}
+
+function editMessage(btn) {
+    const messageContent = btn.parentElement.previousElementSibling;
+    const currentText = messageContent.innerText;
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentText;
+    input.className = 'edit-input';
+    input.style.cssText = `
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 12px 18px;
+        color: white;
+        font-size: 15px;
+        width: 100%;
+        outline: none;
+    `;
+    
+    // Replace content with input
+    messageContent.innerHTML = '';
+    messageContent.appendChild(input);
+    input.focus();
+    
+    // Handle save on Enter
+    input.onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            const newText = input.value.trim();
+            if (newText) {
+                messageContent.innerHTML = newText;
+                
+                // Find and update the next assistant response
+                const messageDiv = btn.closest('.message');
+                let nextMessage = messageDiv.nextElementSibling;
+                
+                // Skip thinking indicator if present
+                if (nextMessage && nextMessage.id === 'thinking-indicator') {
+                    nextMessage = nextMessage.nextElementSibling;
+                }
+                
+                if (nextMessage && nextMessage.classList.contains('assistant')) {
+                    // Show thinking and update response
+                    const thinkingDiv = document.createElement('div');
+                    thinkingDiv.className = 'message assistant thinking-message';
+                    thinkingDiv.innerHTML = '<div class="message-content">Nexa thinking...</div>';
+                    thinkingDiv.id = 'thinking-indicator';
+                    messageDiv.parentNode.insertBefore(thinkingDiv, nextMessage);
+                    
+                    // Get new response
+                    fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: newText })
+                    }).then(res => res.json()).then(data => {
+                        thinkingDiv.remove();
+                        
+                        // Update existing response
+                        nextMessage.querySelector('.message-content').innerHTML = 
+                            '<strong>Nexa AI:</strong><br>' + data.response.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                                      .replace(/`([^`]+)`/g, '<code>$1</code>')
+                                      .replace(/\n/g, '<br>');
+                        
+                        if (data.response) {
+                            speak(data.response);
+                        }
+                    });
+                }
+            }
+        }
+    };
+}
+
+async function sendMessage(query = null) {
     const input = document.getElementById('userInput');
-    const query = input.value.trim();
+    query = query || input.value.trim();
     if (!query) return;
+
+    // Hide welcome screen and show chat if it's the first message
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const chatBox = document.getElementById('chatBox');
+    if (welcomeScreen.style.display !== 'none') {
+        welcomeScreen.style.display = 'none';
+        chatBox.style.display = 'block';
+    }
 
     addMessage(query, 'user');
     input.value = '';
+    
+    showThinking();
 
     try {
         const response = await fetch('/chat', {
@@ -246,15 +419,42 @@ async function sendMessage() {
             body: JSON.stringify({ query })
         });
         const data = await response.json();
-        addMessage(data.response, 'assistant');
+        hideThinking();
+        const responseMsg = document.createElement('div');
+        responseMsg.className = 'message assistant';
+        responseMsg.style.marginTop = '0px';
+        responseMsg.innerHTML = `
+            <div class="message-content"><strong>Nexa AI:</strong><br>${data.response.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, '<br>')}</div>
+            <div class="message-actions">
+                <button onclick="copyMessage(this)" title="Copy">📋</button>
+                <button onclick="likeMessage(this)" title="Like">👍</button>
+                <button onclick="dislikeMessage(this)" title="Dislike">👎</button>
+                <button onclick="shareMessage(this)" title="Share">📤</button>
+                <button onclick="regenerateMessage(this)" title="Regenerate">🔄</button>
+            </div>
+        `;
+        document.getElementById('chatBox').appendChild(responseMsg);
+        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+        
+        if (data.response) {
+            speak(data.response);
+        }
     } catch (e) {
+        hideThinking();
         addMessage('Error connecting to server', 'assistant');
     }
 }
 
 async function sendCommand(cmd) {
-    addMessage(cmd, 'user');
+    // Hide welcome screen and show chat
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const chatBox = document.getElementById('chatBox');
+    if (welcomeScreen.style.display !== 'none') {
+        welcomeScreen.style.display = 'none';
+        chatBox.style.display = 'block';
+    }
 
+    addMessage(cmd, 'user');
     try {
         const response = await fetch('/chat', {
             method: 'POST',
@@ -263,12 +463,8 @@ async function sendCommand(cmd) {
         });
         const data = await response.json();
         addMessage(data.response, 'assistant');
-
-        if (cmd.includes('new chat') || cmd.includes('reset chat')) {
-            setTimeout(loadSavedChats, 500);
-        }
     } catch (e) {
-        addMessage('Error connecting to server', 'assistant');
+        addMessage('Failed to send command', 'assistant');
     }
 }
 
@@ -280,10 +476,7 @@ window.onload = function () {
         }
     }
 
-    const btn = document.getElementById('speakerBtn');
-    btn.classList.add('speaking');
     loadSavedChats();
-    addMessage('Hello! I am Nexa AI Assistant. How can I help you today?', 'assistant');
     
     // Close modal on outside click
     document.addEventListener('click', function(e) {

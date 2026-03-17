@@ -3,12 +3,81 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2d1b69">
     <title>Nexa AI</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/x-icon">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000000 0%, #0a0a0f 50%, #050505 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeOut 0.5s ease 1.5s forwards;
+            overflow: hidden;
+        }
+        #splash::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(240, 147, 251, 0.08) 0%, transparent 50%);
+            animation: splashFloat 8s ease-in-out infinite;
+            z-index: -1;
+        }
+        @keyframes splashFloat {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            33% { transform: rotate(120deg) scale(1.1); }
+            66% { transform: rotate(240deg) scale(0.9); }
+        }
+        #splash .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            animation: zoomIn 1s ease;
+        }
+        #splash .title {
+            margin-top: 20px;
+            font-size: 32px;
+            font-weight: 600;
+            color: white;
+            animation: zoomIn 1s ease;
+        }
+        @keyframes zoomIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+    </style>
 </head>
 
 <body>
+    <div id="splash">
+        <div class="logo">N</div>
+        <div class="title">Nexa AI</div>
+    </div>
     <div class="header">
         <div class="header-left">
             <h1>
@@ -82,6 +151,13 @@
             </div>
         </div>
         <div class="chat-container">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <div class="welcome-logo">N</div>
+                    <h1 class="welcome-title">Welcome to Nexa AI</h1>
+                    <p class="welcome-subtitle">Your intelligent AI assistant ready to help with anything</p>
+                </div>
+            </div>
             <div class="chat-box" id="chatBox"></div>
             <div class="input-container">
                 <div class="input-wrapper">
@@ -99,6 +175,13 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        setTimeout(() => document.getElementById('splash').remove(), 2000);
+    
+    // Show welcome screen by default
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('chatBox').style.display = 'none';
+    </script>
 </body>
 
 </html>

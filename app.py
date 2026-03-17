@@ -1,4 +1,4 @@
-# import packages
+# import package
 import os
 import datetime
 import wikipedia #type:ignore
@@ -68,7 +68,7 @@ def chat(query):
     global chat_history, current_model
     try:
         chat_history.append({"role": "user", "content": query})
-        response = client.chat.completions.create(model=current_model, messages=chat_history, max_tokens=500, temperature=0.7)
+        response = client.chat.completions.create(model=current_model, messages=chat_history, temperature=0.7)
         reply = response.choices[0].message.content
         chat_history.append({"role": "assistant", "content": reply})
         logger.info(f"Chat successful - Model: {current_model}")
@@ -300,7 +300,8 @@ def set_model():
 if __name__ == "__main__":
     logger.info("Starting Nexa AI application")
     try:
-        app.run(host="0.0.0.0", port=10000, debug=False)
+        port = int(os.environ.get("PORT", 8080))
+        app.run(host="0.0.0.0", port=port, debug=False)
     except Exception as e:
         logger.critical(f"Application failed to start: {str(e)}")
         raise
