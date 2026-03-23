@@ -1266,6 +1266,11 @@ def fetch_india_news():
         logger.error(f"NewsAPI fetch error: {e}")
         return f"Failed to fetch news: {str(e)}"
 
-if __name__ == '__main__':
-    is_production = os.environ.get('FLASK_ENV') == 'production'
-    app.run(debug=not is_production, port=5000, host='0.0.0.0')
+if __name__ == "__main__":
+    logger.info("Starting Nexa AI application")
+    try:
+        port = int(os.environ.get("PORT", 8080))
+        app.run(host="0.0.0.0", port=port, debug=False)
+    except Exception as e:
+        logger.critical(f"Application failed to start: {str(e)}")
+        raise
