@@ -1,4 +1,4 @@
-# ✦ Nexa AI — Full-Stack AI Chat Platform
+# Nexa AI — Full-Stack AI Chat Platform
 
 A beautiful, feature-rich AI assistant platform built with Python Flask + SQLite.
 
@@ -189,4 +189,4 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ using Flask, SQLite, and SambaNova AI**
+***Built by [Harsh](https://www.linkedin.com/in/harsh-bca/)***
