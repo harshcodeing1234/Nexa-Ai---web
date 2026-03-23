@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexa AI — Intelligence Redefined</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <style>
+    :root {
+      --bg: #050810;
+      --surface: #0d1117;
+      --surface2: #161b22;
+      --border: rgba(99, 179, 237, 0.12);
+      --accent: #63b3ed;
+      --accent2: #9f7aea;
+      --text: #e2e8f0;
+      --muted: #718096;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99, 179, 237, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 80% at 90% 80%, rgba(159, 122, 234, 0.06) 0%, transparent 60%);
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: linear-gradient(rgba(99, 179, 237, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 179, 237, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(5, 8, 16, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .nav-logo-text {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-outline {
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-filled {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-filled:hover {
+      opacity: 0.9;
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(99, 179, 237, 0.08);
+      border: 1px solid rgba(99, 179, 237, 0.2);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--accent);
+      margin-bottom: 32px;
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    h1 {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      font-size: clamp(42px, 7vw, 88px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    h1 .grad {
+      background: linear-gradient(135deg, var(--accent), var(--accent2), #f687b3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      max-width: 560px;
+      font-size: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-btn-main {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .hero-btn-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(99, 179, 237, 0.25);
+    }
+
+    .hero-btn-sec {
+      padding: 14px 32px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .hero-btn-sec:hover {
+      border-color: var(--accent);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 60px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* SECTIONS */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 100px 40px;
+    }
+
+    .section-tag {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      font-size: clamp(28px, 4vw, 48px);
+      margin-bottom: 20px;
+      line-height: 1.15;
+    }
+
+    .section-sub {
+      max-width: 500px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 60px;
+      font-size: 16px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99, 179, 237, 0.04), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(99, 179, 237, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .model-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .model-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .model-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .model-name {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .model-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .contact-form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .contact-form textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .contact-form button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .about-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .about-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .about-big-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    @media(max-width:768px) {
+      nav {
+        padding: 12px 20px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-stats {
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .about-content {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 60px 20px;
+      }
+
+      .hero {
+        padding: 80px 20px 40px;
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .hero-sub {
+        font-size: 16px;
+      }
+
+      .model-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-form input,
+      .contact-form textarea {
+        font-size: 14px;
+      }
+
+      .nav-cta {
+        gap: 8px;
+      }
+
+      .btn-outline,
+      .btn-filled {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+    }
+
+    @media(max-width:480px) {
+      .hero h1 {
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+      }
+
+      .hero-badge {
+        font-size: 11px;
+        padding: 6px 14px;
+      }
+
+      .hero-btn-main,
+      .hero-btn-sec {
+        padding: 12px 20px;
+        font-size: 14px;
+      }
+
+      .stat-num {
+        font-size: 28px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+      }
+
+      section h2 {
+        font-size: 28px;
+      }
+
+      .section-sub {
+        font-size: 14px;
+      }
+
+      .model-card,
+      .feature-card {
+        padding: 20px;
+      }
+
+      .about-big-icon {
+        font-size: 60px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-canvas"></div>
+  <div class="grid"></div>
+
+  <nav>
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-icon">N</div>
+      <span class="nav-logo-text">NEXA AI</span>
+    </a>
+    <div class="nav-links">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-cta" id="nav-cta">
+      <a class="btn-outline" href="/auth" id="auth-btn">Sign In</a>
+      <a class="btn-filled" href="/chat" id="mode-btn">Try Free</a>
+    </div>
+  </nav>
+
+  <script>
+    // Check current mode and update button
+    const currentMode = localStorage.getItem('currentMode') || 'chat';
+    const modeBtn = document.getElementById('mode-btn');
+    if (currentMode === 'automation') {
+      modeBtn.textContent = 'Automation';
+      modeBtn.innerHTML = '🤖 Automation';
+    } else {
+      modeBtn.textContent = 'Chat';
+      modeBtn.innerHTML = '💬 Chat';
+    }
+
+    // Check if user is logged in
+    fetch('/api/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.logged_in) {
+          document.getElementById('auth-btn').textContent = 'Dashboard';
+          document.getElementById('auth-btn').href = '/chat';
+        }
+      })
+      .catch(() => { });
+  </script>
+
+  <!-- HOME -->
+  <section class="hero" id="home">
+    <div class="hero-badge"><span></span> Next-Generation AI Platform</div>
+    <h1>Intelligence <span class="grad">Redefined</span><br>for Everyone</h1>
+    <p class="hero-sub">Full-stack AI platform with 5 specialized models, voice I/O, automation mode, task management,
+      and enterprise security — all in one beautiful interface.</p>
+    <div class="hero-btns">
+      <a class="hero-btn-main" href="/chat">Start Chatting Free →</a>
+      <a class="hero-btn-sec" href="#features">Explore Features</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">5</div>
+        <div class="stat-label">AI Models</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Modes</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">16+</div>
+        <div class="stat-label">Features</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Secure</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="about-content">
+        <div>
+          <div class="section-tag">About Nexa AI</div>
+          <h2>Built for the Future of Human–AI Collaboration</h2>
+          <p style="color:var(--muted);line-height:1.8;font-size:16px;margin-bottom:20px;">Nexa AI is a full-stack
+            conversational intelligence platform built with Python Flask and SQLite. It combines multiple specialized AI
+            models, dual-mode interface (Chat & Automation), voice interaction, task management, and enterprise-grade
+            security in one seamless experience.</p>
+          <p style="color:var(--muted);line-height:1.8;font-size:16px;">With features like real-time web search, offline
+            PWA support, message editing, chat export, and flexible authentication — Nexa isn't just an AI chatbot, it's
+            your complete intelligent workspace.</p>
+        </div>
+        <div class="about-visual">
+          <div class="about-big-icon">N</div>
+          <div
+            style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-weight:800;font-size:24px;margin-bottom:12px;">
+            Nexa AI Platform</div>
+          <div style="color:var(--muted);font-size:14px;line-height:1.7;">
+            5 Models · 2 Modes · Voice I/O<br>
+            Task Manager · Web Search · PWA<br>
+            Chat Export · Secure · Responsive
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="background:rgba(13,17,23,0.5);">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="section-tag">Features</div>
+      <h2>Everything You Need, Nothing You Don't</h2>
+      <p class="section-sub">A carefully crafted set of tools that make AI interaction natural, powerful, and actually
+        useful.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎙️</div>
+          <div class="feature-title">Voice Input & Output</div>
+          <div class="feature-desc">Speak your questions and hear AI responses in natural female voice. Auto-sends on
+            speech completion.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">5 Specialized AI Models</div>
+          <div class="feature-desc">Pro, Flash, Vision, Code, and Research models optimized for different tasks.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <div class="feature-title">Dual Mode Interface</div>
+          <div class="feature-desc">Switch between Chat and Automation modes. Each with dedicated interface and
+            features.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📌</div>
+          <div class="feature-title">Chat History Management</div>
+          <div class="feature-desc">Save, pin, rename, delete, and share conversations. Full control over your chat
+            history.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <div class="feature-title">Built-in Task Manager</div>
+          <div class="feature-desc">Create, organize, and track tasks with priority levels right in the sidebar.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Quick Commands</div>
+          <div class="feature-desc">10+ pre-built prompts for common tasks: explain, summarize, translate, debug, and
+            more.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏱️</div>
+          <div class="feature-title">Temporary Chats</div>
+          <div class="feature-desc">Start conversations that aren't saved to history. Perfect for quick queries.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <div class="feature-title">Web Search Integration</div>
+          <div class="feature-desc">Real-time web search with India news and Wikipedia integration for current
+            information.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👤</div>
+          <div class="feature-title">Flexible Authentication</div>
+          <div class="feature-desc">Login via email or phone, or use Guest Mode without an account.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">Fully Responsive</div>
+          <div class="feature-desc">Works seamlessly on desktop, tablet, and mobile devices with adaptive UI.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✏️</div>
+          <div class="feature-title">Edit Messages</div>
+          <div class="feature-desc">Edit your messages in-chat and regenerate AI responses with improved prompts.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📤</div>
+          <div class="feature-title">Export & Share</div>
+          <div class="feature-desc">Export chats as JSON or TXT. Share conversations with unique links.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <div class="feature-title">Message Actions</div>
+          <div class="feature-desc">Copy, like, dislike, share, regenerate, and speak any message with one click.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📴</div>
+          <div class="feature-title">Offline Support</div>
+          <div class="feature-desc">PWA with service worker for offline access and app-like experience.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-title">Dark/Light Theme</div>
+          <div class="feature-desc">Beautiful themes with smooth transitions. Your preference is saved automatically.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">Enterprise Security</div>
+          <div class="feature-desc">CSRF protection, XSS prevention, rate limiting, strong passwords, and secure
+            sessions.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:60px;">
+        <h2>Five Minds, One Platform</h2>
+        <p class="section-sub">Each model is tuned for a specific domain. Switch between them instantly.</p>
+        <div class="models-grid">
+          <div class="model-card">
+            <div class="model-icon">🧠</div>
+            <div class="model-name">Nexa Pro</div>
+            <div class="model-desc">Deep reasoning & complex analysis</div>
+          </div>
+          <div class="model-card">
+            <div class="model-icon">⚡</div>
+            <div class="model-name">Nexa Flash</div>
+            <div class="model-desc">Lightning-fast concise answers</div>
+          </div>
+          <div class="model-card">
+            <div class="model-icon">👁️</div>
+            <div class="model-name">Nexa Vision</div>
+            <div class="model-desc">Creative & visual thinking</div>
+          </div>
+          <div class="model-card">
+            <div class="model-icon">💻</div>
+            <div class="model-name">Nexa Code</div>
+            <div class="model-desc">Expert programming assistant</div>
+          </div>
+          <div class="model-card">
+            <div class="model-icon">🔬</div>
+            <div class="model-name">Nexa Research</div>
+            <div class="model-desc">Deep research & citations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div style="max-width:1100px;margin:0 auto;text-align:center;">
+      <div class="section-tag">Contact</div>
+      <h2>Get in Touch</h2>
+      <p class="section-sub" style="margin:0 auto 40px;">Have questions, feedback, or partnership inquiries? We'd love
+        to hear from you.</p>
+      <div class="contact-form">
+        <input type="text" placeholder="Your name">
+        <input type="email" placeholder="Email address">
+        <textarea placeholder="Your message..."></textarea>
+        <button onclick="alert('Message sent! (Demo)')">Send Message</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-weight:800;font-size:18px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">NEXA AI</div>
+    <div>© 2025 Nexa AI. All rights reserved. Built with intelligence.</div>
+  </footer>
+
+  <script>
+    // Optional: Redirect to chat on mobile devices (commented out to allow landing page viewing)
+    // if (window.innerWidth <= 768) {
+    //   window.location.href = '/chat';
+    // }
+  </script>
+</body>
+
+</html>

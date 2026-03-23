@@ -1,0 +1,90 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+secrets/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Uploads & User Data
+uploads/
+uploads/photos/
+uploads/files/
+static/uploads/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Build & Distribution
+build/
+dist/
+*.whl
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*~
+
+# Cache
+.cache/
+*.cache
+nexa_ai.db-shm
+nexa_ai.db-wal

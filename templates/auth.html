@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa AI — Sign In</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#667eea">
+<style>
+:root {
+  --bg: #050810;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --border: rgba(99,179,237,0.12);
+  --accent: #63b3ed;
+  --accent2: #9f7aea;
+  --text: #e2e8f0;
+  --muted: #718096;
+  --danger: #fc8181;
+  --success: #68d391;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,179,237,0.07) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 80% at 80% 80%, rgba(159,122,234,0.07) 0%, transparent 60%);
+}
+.grid-lines {
+  position: fixed; inset: 0; z-index: 0;
+  background-image: linear-gradient(rgba(99,179,237,0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(99,179,237,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.auth-container {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 460px;
+  padding: 20px;
+}
+.logo-block {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.logo-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: bold; color: #fff;
+  margin-bottom: 12px;
+  box-shadow: 0 0 40px rgba(102,126,234,0.3);
+}
+.logo-name {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px;
+  backdrop-filter: blur(20px);
+}
+.tabs {
+  display: flex;
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus { border-color: var(--accent); }
+input::placeholder { color: var(--muted); }
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 13px;
+  position: relative;
+}
+.divider::before, .divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--border);
+}
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+.btn-guest {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-guest:hover { border-color: var(--accent); color: var(--accent); }
+.error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; text-align: center; }
+.success-msg { color: var(--success); font-size: 13px; margin-top: 10px; text-align: center; }
+.hidden { display: none !important; }
+
+@media(max-width:768px) {
+  .auth-container { padding: 20px; }
+  .card { padding: 30px 24px; }
+  .logo-name { font-size: 24px; }
+  .card-title { font-size: 22px; }
+}
+
+@media(max-width:480px) {
+  .auth-container { padding: 16px; }
+  .card { padding: 24px 20px; }
+  .logo-icon { width: 50px; height: 50px; font-size: 28px; }
+  .logo-name { font-size: 20px; }
+  .card-title { font-size: 20px; }
+  .card-subtitle { font-size: 13px; }
+  .tab-btn { padding: 10px 20px; font-size: 13px; }
+  .form-group label { font-size: 13px; }
+  .form-group input { padding: 12px 14px; font-size: 14px; }
+  .btn-primary, .btn-guest { padding: 12px; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-canvas"></div>
+<div class="grid-lines"></div>
+<div class="auth-container">
+  <div class="logo-block">
+    <div class="logo-icon">N</div>
+    <div class="logo-name">NEXA AI</div>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email or Phone</label>
+        <input type="text" id="login-identifier" placeholder="email@example.com or +91...">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password">
+      </div>
+      <div style="text-align:right;margin-top:-8px;margin-bottom:12px;">
+        <a href="#" onclick="showForgotPassword();return false;" style="color:var(--accent);font-size:13px;text-decoration:none;">Forgot Password?</a>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <div class="divider">or</div>
+      <button class="btn-guest" onclick="guestMode()">Continue without signing in →</button>
+      <div id="login-msg"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="signup-form" class="hidden">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="signup-name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Email (optional if phone provided)</label>
+        <input type="email" id="signup-email" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Phone (optional if email provided)</label>
+        <input type="tel" id="signup-phone" placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min 6 characters">
+      </div>
+      <button class="btn-primary" onclick="doSignup()">Create Account</button>
+      <div class="divider">or</div>
+      <button class="btn-guest" onclick="guestMode()">Continue without signing in →</button>
+      <div id="signup-msg"></div>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="forgot-form" class="hidden">
+      <div style="text-align:center;margin-bottom:20px;">
+        <h3 style="color:var(--text);margin:0 0 8px 0;">Reset Password</h3>
+        <p style="color:var(--muted);font-size:13px;margin:0;">Enter your email or phone</p>
+      </div>
+      <div class="form-group">
+        <label>Email or Phone</label>
+        <input type="text" id="forgot-identifier" placeholder="email@example.com or +91...">
+      </div>
+      <button class="btn-primary" onclick="sendResetLink()">Get Reset Link</button>
+      <div style="text-align:center;margin-top:16px;">
+        <a href="#" onclick="switchTab('login');return false;" style="color:var(--accent);font-size:13px;text-decoration:none;">← Back to Sign In</a>
+      </div>
+      <div id="forgot-msg"></div>
+    </div>
+  </div>
+</div>
+<script>
+let csrfToken = '';
+
+// Fetch CSRF token on page load
+async function fetchCSRFToken() {
+  try {
+    const r = await fetch('/api/csrf-token');
+    const d = await r.json();
+    csrfToken = d.csrf_token;
+  } catch(e) {
+    console.error('Failed to fetch CSRF token:', e);
+  }
+}
+
+fetchCSRFToken();
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (tab==='login'&&i===0)||(tab==='signup'&&i===1)));
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+  document.getElementById('forgot-form').classList.add('hidden');
+}
+
+function showForgotPassword() {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('signup-form').classList.add('hidden');
+  document.getElementById('forgot-form').classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+}
+
+async function sendResetLink() {
+  const identifier = document.getElementById('forgot-identifier').value;
+  const msg = document.getElementById('forgot-msg');
+  
+  if (!identifier) {
+    msg.className='error-msg'; 
+    msg.textContent='Please enter email or phone';
+    return;
+  }
+  
+  try {
+    const r = await fetch('/api/forgot-password', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},
+      body:JSON.stringify({identifier})
+    });
+    const d = await r.json();
+    
+    if (d.success) {
+      msg.className='success-msg';
+      msg.innerHTML = '<strong>Reset link generated!</strong><br><br>' + 
+                      'Check server console/logs for the reset link.<br><br>' +
+                      '<a href="' + d.link + '" style="color:var(--accent);text-decoration:underline;">Click here to reset password</a>';
+    } else {
+      msg.className='error-msg';
+      msg.textContent=d.error;
+    }
+  } catch(e) {
+    msg.className='error-msg';
+    msg.textContent='Network error';
+  }
+}
+async function doLogin() {
+  const identifier = document.getElementById('login-identifier').value;
+  const password = document.getElementById('login-password').value;
+  const msg = document.getElementById('login-msg');
+  try {
+    const r = await fetch('/api/login', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify({identifier,password})});
+    const d = await r.json();
+    if (d.success) { msg.className='success-msg'; msg.textContent='Welcome back, '+d.name+'!'; setTimeout(()=>location.href='/chat',800); }
+    else { msg.className='error-msg'; msg.textContent=d.error; }
+  } catch(e) { msg.className='error-msg'; msg.textContent='Network error'; }
+}
+async function doSignup() {
+  const name = document.getElementById('signup-name').value;
+  const email = document.getElementById('signup-email').value;
+  const phone = document.getElementById('signup-phone').value;
+  const password = document.getElementById('signup-password').value;
+  const msg = document.getElementById('signup-msg');
+  try {
+    const r = await fetch('/api/signup', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify({name,email,phone,password})});
+    const d = await r.json();
+    if (d.success) { msg.className='success-msg'; msg.textContent='Account created! Welcome, '+d.name+'!'; setTimeout(()=>location.href='/chat',800); }
+    else { msg.className='error-msg'; msg.textContent=d.error; }
+  } catch(e) { msg.className='error-msg'; msg.textContent='Network error'; }
+}
+function guestMode() { location.href='/chat'; }
+document.addEventListener('keydown', e => { if(e.key==='Enter') { if(!document.getElementById('login-form').classList.contains('hidden')) doLogin(); else doSignup(); } });
+</script>
+</body>
+</html>
