@@ -3,3 +3,5 @@ Werkzeug>=3.0.0
 openai>=1.0.0
 bleach>=6.0.0
 PyPDF2>=3.0.0
+python-telegram-bot 
+requests
