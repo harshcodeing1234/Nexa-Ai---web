@@ -1,2 +1,7 @@
+modules = ["python-3.11"]
 [agent]
 expertMode = true
+
+[deployment]
+run = ["sh", "-c", "python app.py"]
+deploymentTarget = "cloudrun"
