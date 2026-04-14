@@ -1,544 +1,819 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexa AI — Chat</title>
-<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#667eea">
-<link rel="stylesheet" href="/static/css/chat.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexa AI — Chat</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <link rel="stylesheet" href="/static/css/chat.css">
 </head>
+
 <body>
 
-<!-- ═══ MODALS & OVERLAYS ═══════════════════════════════════════════════ -->
+  <!-- ═══ MODALS & OVERLAYS ═══════════════════════════════════════════════ -->
 
-<!-- MODEL PICKER -->
-<div id="model-overlay" class="overlay hidden">
-  <div class="model-picker">
-    <div class="modal-header">
-      <span class="modal-title">Select AI Model</span>
-      <button class="icon-btn" onclick="closeModelPicker()">✕</button>
-    </div>
-    <div class="model-list">
-      <div class="model-option" data-model="nexa-pro" onclick="selectModel(this)">
-        <div class="model-opt-icon">🧠</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Nexa Pro</div>
-          <div class="model-opt-desc">Advanced reasoning & deep analysis</div>
-        </div>
-        <div class="model-check">✓</div>
+  <!-- MODEL PICKER -->
+  <div id="model-overlay" class="overlay hidden">
+    <div class="model-picker">
+      <div class="modal-header">
+        <span class="modal-title">Select AI Model</span>
+        <button class="icon-btn" onclick="closeModelPicker()">✕</button>
       </div>
-      <div class="model-option" data-model="nexa-flash" onclick="selectModel(this)">
-        <div class="model-opt-icon">⚡</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Nexa Flash</div>
-          <div class="model-opt-desc">Lightning-fast concise responses</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-      <div class="model-option" data-model="nexa-vision" onclick="selectModel(this)">
-        <div class="model-opt-icon">👁️</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Nexa Vision</div>
-          <div class="model-opt-desc">Creative & visual thinking</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-      <div class="model-option" data-model="nexa-code" onclick="selectModel(this)">
-        <div class="model-opt-icon">💻</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Nexa Code</div>
-          <div class="model-opt-desc">Expert programming assistant</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-      <div class="model-option" data-model="nexa-research" onclick="selectModel(this)">
-        <div class="model-opt-icon">🔬</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Nexa Research</div>
-          <div class="model-opt-desc">Deep research & comprehensive analysis</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODE SELECTOR -->
-<div id="mode-overlay" class="overlay hidden">
-  <div class="model-picker">
-    <div class="modal-header">
-      <span class="modal-title">Select Mode</span>
-      <button class="icon-btn" onclick="closeModeSelector()">✕</button>
-    </div>
-    <div class="model-list">
-      <div class="model-option selected" data-mode="chat" onclick="selectMode(this)">
-        <div class="model-opt-icon">💬</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Chat</div>
-          <div class="model-opt-desc">Interactive conversation mode</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-      <div class="model-option" data-mode="automation" onclick="selectMode(this)">
-        <div class="model-opt-icon">🤖</div>
-        <div class="model-opt-info">
-          <div class="model-opt-name">Automation</div>
-          <div class="model-opt-desc">Automated task execution</div>
-        </div>
-        <div class="model-check">✓</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PROFILE MODAL -->
-<div id="profile-modal" class="overlay hidden">
-  <div class="modal-box wide-modal">
-    <div class="modal-header">
-      <span class="modal-title">👤 My Profile</span>
-      <button class="icon-btn" onclick="closeModal('profile-modal')">✕</button>
-    </div>
-    <div class="profile-stats" id="profile-stats">
-      <div class="stat-chip"><span class="stat-num" id="stat-chats">—</span><span class="stat-lbl">Chats</span></div>
-      <div class="stat-chip"><span class="stat-num" id="stat-msgs">—</span><span class="stat-lbl">Messages</span></div>
-      <div class="stat-chip"><span class="stat-num" id="stat-tasks">—</span><span class="stat-lbl">Tasks</span></div>
-    </div>
-    <div class="form-row">
-      <label>Profile Photo</label>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="user-avatar-circle" id="profile-avatar-preview" style="width:60px;height:60px;font-size:28px;">G</div>
-        <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(event)">
-        <button class="btn-sm-outline" onclick="document.getElementById('profile-photo-input').click()">Upload Photo</button>
-        <button class="btn-sm-outline" onclick="removeProfilePhoto()" id="remove-photo-btn" style="display:none;">Remove</button>
-      </div>
-    </div>
-    <div class="form-row">
-      <label>Display Name</label>
-      <input type="text" id="profile-name" placeholder="Your name">
-    </div>
-    <div class="form-row">
-      <label>New Password <span style="color:var(--muted);font-weight:400">(leave blank to keep current)</span></label>
-      <input type="password" id="profile-password" placeholder="New password">
-    </div>
-    <div class="form-row">
-      <label>Theme</label>
-      <div class="theme-toggle-row">
-        <button class="theme-btn active" id="theme-dark-btn" onclick="setTheme('dark')">🌙 Dark</button>
-        <button class="theme-btn" id="theme-light-btn" onclick="setTheme('light')">☀️ Light</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
-      <button class="btn-sm-outline" onclick="closeModal('profile-modal')">Cancel</button>
-      <button class="btn-sm-filled" onclick="saveProfile()">Save Changes</button>
-    </div>
-  </div>
-</div>
-
-<!-- WIKIPEDIA MODAL -->
-<div id="wikipedia-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">📚 Wikipedia Search</span><button class="icon-btn" onclick="closeModal('wikipedia-modal')">✕</button></div>
-    <div class="form-row"><input type="text" id="wikipedia-query" placeholder="Enter topic (e.g., India, Python, AI)" onkeypress="if(event.key==='Enter')fetchWikipedia()"></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
-      <button class="btn-sm-outline" onclick="closeModal('wikipedia-modal')">Cancel</button>
-      <button class="btn-sm-filled" onclick="fetchWikipedia()">Search</button>
-    </div>
-  </div>
-</div>
-
-<!-- RENAME MODAL -->
-<div id="rename-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">✏️ Rename Chat</span><button class="icon-btn" onclick="closeModal('rename-modal')">✕</button></div>
-    <div class="form-row"><input type="text" id="rename-input" placeholder="New chat title..."></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-sm-outline" onclick="closeModal('rename-modal')">Cancel</button>
-      <button class="btn-sm-filled" onclick="confirmRename()">Rename</button>
-    </div>
-  </div>
-</div>
-
-<!-- ADD TASK MODAL -->
-<div id="task-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">✅ Add Task</span><button class="icon-btn" onclick="closeModal('task-modal')">✕</button></div>
-    <div class="form-row"><input type="text" id="task-input" placeholder="What needs to be done?"></div>
-    <div class="form-row">
-      <label>Priority</label>
-      <div class="priority-row">
-        <button class="priority-btn active" data-priority="normal" onclick="selectPriority(this)">Normal</button>
-        <button class="priority-btn" data-priority="high" onclick="selectPriority(this)" style="border-color:rgba(246,173,85,0.3);color:#f6ad55;">🔥 High</button>
-        <button class="priority-btn" data-priority="urgent" onclick="selectPriority(this)" style="border-color:rgba(252,129,129,0.3);color:#fc8181;">🚨 Urgent</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
-      <button class="btn-sm-outline" onclick="closeModal('task-modal')">Cancel</button>
-      <button class="btn-sm-filled" onclick="confirmAddTask()">Add Task</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDIT MESSAGE MODAL -->
-<div id="edit-msg-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">✏️ Edit Message</span><button class="icon-btn" onclick="closeModal('edit-msg-modal')">✕</button></div>
-    <div class="form-row"><textarea id="edit-msg-input" rows="4" placeholder="Edit your message..."></textarea></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-sm-outline" onclick="closeModal('edit-msg-modal')">Cancel</button>
-      <button class="btn-sm-filled" onclick="confirmEditMsg()">Save & Resend</button>
-    </div>
-  </div>
-</div>
-
-<!-- EXPORT MODAL -->
-<div id="export-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">📥 Export Chat</span><button class="icon-btn" onclick="closeModal('export-modal')">✕</button></div>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">Download this conversation in your preferred format.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <button class="export-btn" onclick="doExport('txt')">📄 Export as Plain Text (.txt)</button>
-      <button class="export-btn" onclick="doExport('json')">🗂️ Export as JSON (.json)</button>
-    </div>
-    <div style="margin-top:16px;text-align:right;">
-      <button class="btn-sm-outline" onclick="closeModal('export-modal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- KEYBOARD SHORTCUTS MODAL -->
-<div id="shortcuts-modal" class="overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header"><span class="modal-title">⌨️ Keyboard Shortcuts</span><button class="icon-btn" onclick="closeModal('shortcuts-modal')">✕</button></div>
-    <div class="shortcuts-grid">
-      <div class="shortcut-row"><kbd>Enter</kbd><span>Send message</span></div>
-      <div class="shortcut-row"><kbd>Shift+Enter</kbd><span>New line</span></div>
-      <div class="shortcut-row"><kbd>Ctrl+N</kbd><span>New chat</span></div>
-      <div class="shortcut-row"><kbd>Ctrl+/</kbd><span>Show shortcuts</span></div>
-      <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Search chats</span></div>
-      <div class="shortcut-row"><kbd>Ctrl+E</kbd><span>Export chat</span></div>
-      <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal / clear input</span></div>
-      <div class="shortcut-row"><kbd>Ctrl+B</kbd><span>Toggle sidebar</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- CHAT CONTEXT MENU -->
-<div id="chat-ctx-menu" class="ctx-menu hidden">
-  <div class="ctx-item" onclick="ctxShare()">🔗 Share Link</div>
-  <div class="ctx-item" onclick="ctxRename()">✏️ Rename</div>
-  <div class="ctx-item" onclick="ctxPin()">📌 <span id="ctx-pin-label">Pin Chat</span></div>
-  <div class="ctx-item" onclick="ctxSave()">💾 <span id="ctx-save-label">Save Chat</span></div>
-  <div class="ctx-item" onclick="ctxExport()">📥 Export</div>
-  <div class="ctx-divider"></div>
-  <div class="ctx-item ctx-danger" onclick="ctxDelete()">🗑️ Delete</div>
-</div>
-
-<!-- ═══ MAIN LAYOUT ═════════════════════════════════════════════════════ -->
-<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
-
-<div class="app-layout">
-
-  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
-  <aside class="sidebar" id="sidebar">
-
-    <!-- CHAT SIDEBAR -->
-    <div id="chat-sidebar" class="sidebar-content">
-      <div class="sidebar-top">
-        <button class="logo-btn" onclick="openModelPicker()" title="Switch AI Model">
-          <div class="logo-icon-sm">N</div>
-          <div class="logo-text-sm">NEXA</div>
-        </button>
-        <div style="display:flex;gap:6px;">
-          <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle theme">🌙</button>
-          <button class="icon-btn" onclick="toggleSidebar()" id="sidebar-close-btn" title="Collapse">☰</button>
-        </div>
-      </div>
-
-      <!-- Search -->
-      <div class="sidebar-search">
-        <span class="search-icon"><svg
-                              xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <circle cx="11" cy="11" r="8"></circle>
-                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                          </svg></span>
-        <input type="text" id="chat-search" placeholder="Search chats... (Ctrl+K)" oninput="filterChats()">
-      </div>
-
-      <!-- Actions -->
-      <div class="sidebar-section">
-        <button class="sidebar-action-btn primary-action" onclick="newChat()">
-          <span>N</span> New Chat
-        </button>
-        <button class="sidebar-action-btn" onclick="newTempChat()">
-          <span>⏱</span> Temporary Chat
-        </button>
-      </div>
-
-      <!-- Quick Commands -->
-      <div class="sidebar-section">
-        <div class="sidebar-label">⚡ Quick Commands</div>
-        <div class="quick-commands">
-          <button class="qcmd" onclick="fetchIndiaNews()">🇮🇳 India News</button>
-          <button class="qcmd" onclick="openWikipediaModal()">📚 Wikipedia</button>
-          <button class="qcmd" onclick="insertQuickCmd('Explain this in simple terms: ')">💡 Explain</button>
-          <button class="qcmd" onclick="insertQuickCmd('Summarize: ')">📋 Summarize</button>
-          <button class="qcmd" onclick="insertQuickCmd('Write code for: ')">💻 Code</button>
-          <button class="qcmd" onclick="insertQuickCmd('Translate to Hindi: ')">🌐 Translate</button>
-          <button class="qcmd" onclick="insertQuickCmd('Improve this text: ')">✏️ Improve</button>
-          <button class="qcmd" onclick="insertQuickCmd('Step-by-step guide for: ')">📝 Steps</button>
-          <button class="qcmd" onclick="insertQuickCmd('Debug this code: ')">🐛 Debug</button>
-          <button class="qcmd" onclick="insertQuickCmd('Give pros and cons of: ')">⚖️ Pros/Cons</button>
-        </div>
-      </div>
-
-      <!-- Pinned -->
-      <div class="sidebar-section" id="pinned-section" style="display:none;">
-        <div class="sidebar-label">📌 Pinned</div>
-        <div id="pinned-list" class="chat-list"></div>
-      </div>
-
-      <!-- Saved -->
-      <div class="sidebar-section" id="saved-section" style="display:none;">
-        <div class="sidebar-label">💾 Saved</div>
-        <div id="saved-list" class="chat-list"></div>
-      </div>
-
-      <!-- Recent -->
-      <div class="sidebar-section flex-grow">
-        <div class="sidebar-label">🕐 Recent</div>
-        <div id="all-chats-list" class="chat-list">
-          <div class="empty-list-hint">No chats yet. Start a new one!</div>
-        </div>
-      </div>
-
-      <!-- Tasks -->
-      <div class="sidebar-section task-section">
-        <div class="sidebar-label-row">
-          <span>✅ Tasks <span id="tasks-count" class="task-count-badge"></span></span>
-          <button class="icon-btn-sm" onclick="openModal('task-modal')" title="Add task">+</button>
-        </div>
-      <div id="task-list" class="task-list"></div>
-    </div>
-
-    <!-- User -->
-    <div class="sidebar-bottom">
-      <div class="user-row-bottom" onclick="openProfileModal()" style="cursor:pointer;" title="Edit profile">
-        <div class="user-avatar-circle" id="sidebar-avatar">G</div>
-        <div class="user-info-col">
-          <div class="user-name-small" id="sidebar-username">Guest</div>
-          <div class="user-mode-label" id="sidebar-mode">Guest Mode</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px;">
-        <button class="icon-btn" onclick="openModal('shortcuts-modal')" title="Keyboard shortcuts">⌨️</button>
-        <button class="icon-btn" id="logout-btn" onclick="doLogout()" title="Logout" style="display:none;">⎋</button>
-      </div>
-    </div>
-    </div>
-
-    <!-- AUTOMATION SIDEBAR -->
-    <div id="automation-sidebar" class="sidebar-content hidden">
-      <div class="sidebar-top">
-        <button class="logo-btn" title="Nexa Automation">
-          <div class="logo-icon-sm">🤖</div>
-          <div class="logo-text-sm">AUTO</div>
-        </button>
-        <div style="display:flex;gap:6px;">
-          <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
-          <button class="icon-btn" onclick="toggleSidebar()" title="Collapse">☰</button>
-        </div>
-      </div>
-
-      <!-- Automation Actions -->
-      <div class="sidebar-section">
-        <button class="sidebar-action-btn primary-action">
-          <span>⚡</span> New Workflow
-        </button>
-        <button class="sidebar-action-btn">
-          <span>📋</span> Templates
-        </button>
-      </div>
-
-      <!-- Workflows -->
-      <div class="sidebar-section flex-grow">
-        <div class="sidebar-label">🔄 Workflows</div>
-        <div class="chat-list">
-          <div class="empty-list-hint">No workflows yet. Create one!</div>
-        </div>
-      </div>
-
-      <!-- Automation Stats -->
-      <div class="sidebar-section">
-        <div class="sidebar-label">📊 Stats</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--muted);">Active</span>
-            <span style="color:var(--success);font-weight:600;">0</span>
+      <div class="model-list">
+        <div class="model-option" data-model="nexa-pro" onclick="selectModel(this)">
+          <div class="model-opt-icon">🧠</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Nexa Pro</div>
+            <div class="model-opt-desc">Advanced reasoning & deep analysis</div>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span style="color:var(--muted);">Completed</span>
-            <span style="color:var(--accent);font-weight:600;">0</span>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-model="nexa-flash" onclick="selectModel(this)">
+          <div class="model-opt-icon">⚡</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Nexa Flash</div>
+            <div class="model-opt-desc">Lightning-fast concise responses</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-model="nexa-vision" onclick="selectModel(this)">
+          <div class="model-opt-icon">👁️</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Nexa Vision</div>
+            <div class="model-opt-desc">Creative & visual thinking</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-model="nexa-code" onclick="selectModel(this)">
+          <div class="model-opt-icon">💻</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Nexa Code</div>
+            <div class="model-opt-desc">Expert programming assistant</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-model="nexa-research" onclick="selectModel(this)">
+          <div class="model-opt-icon">🔬</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Nexa Research</div>
+            <div class="model-opt-desc">Deep research & comprehensive analysis</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE SELECTOR -->
+  <div id="mode-overlay" class="overlay hidden">
+    <div class="model-picker">
+      <div class="modal-header">
+        <span class="modal-title">Select Mode</span>
+        <button class="icon-btn" onclick="closeModeSelector()">✕</button>
+      </div>
+      <div class="model-list">
+        <div class="model-option selected" data-mode="chat" onclick="selectMode(this)">
+          <div class="model-opt-icon">💬</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Chat</div>
+            <div class="model-opt-desc">Interactive conversation mode</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-mode="automation" onclick="selectMode(this)">
+          <div class="model-opt-icon">🤖</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Automation</div>
+            <div class="model-opt-desc">Automated task execution</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+        <div class="model-option" data-mode="diary" onclick="selectMode(this)">
+          <div class="model-opt-icon">📔</div>
+          <div class="model-opt-info">
+            <div class="model-opt-name">Personal Diary</div>
+            <div class="model-opt-desc">Write and manage your daily entries</div>
+          </div>
+          <div class="model-check">✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div id="profile-modal" class="overlay hidden">
+    <div class="modal-box wide-modal">
+      <div class="modal-header">
+        <span class="modal-title">👤 My Profile</span>
+        <button class="icon-btn" onclick="closeModal('profile-modal')">✕</button>
+      </div>
+      <div class="profile-stats" id="profile-stats">
+        <div class="stat-chip"><span class="stat-num" id="stat-chats">—</span><span class="stat-lbl">Chats</span></div>
+        <div class="stat-chip"><span class="stat-num" id="stat-msgs">—</span><span class="stat-lbl">Messages</span>
+        </div>
+        <div class="stat-chip"><span class="stat-num" id="stat-tasks">—</span><span class="stat-lbl">Tasks</span></div>
+      </div>
+      <div class="form-row">
+        <label>Profile Photo</label>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="user-avatar-circle" id="profile-avatar-preview" style="width:60px;height:60px;font-size:28px;">G
+          </div>
+          <input type="file" id="profile-photo-input" accept="image/*" style="display:none"
+            onchange="handleProfilePhotoUpload(event)">
+          <button class="btn-sm-outline" onclick="document.getElementById('profile-photo-input').click()">Upload
+            Photo</button>
+          <button class="btn-sm-outline" onclick="removeProfilePhoto()" id="remove-photo-btn"
+            style="display:none;">Remove</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Display Name</label>
+        <input type="text" id="profile-name" placeholder="Your name">
+      </div>
+      <div class="form-row">
+        <label>New Password <span style="color:var(--muted);font-weight:400">(leave blank to keep
+            current)</span></label>
+        <input type="password" id="profile-password" placeholder="New password">
+      </div>
+      <div class="form-row">
+        <label>Theme</label>
+        <div class="theme-toggle-row">
+          <button class="theme-btn active" id="theme-dark-btn" onclick="setTheme('dark')">🌙 Dark</button>
+          <button class="theme-btn" id="theme-light-btn" onclick="setTheme('light')">☀️ Light</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn-sm-outline" onclick="closeModal('profile-modal')">Cancel</button>
+        <button class="btn-sm-filled" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIKIPEDIA MODAL -->
+  <div id="wikipedia-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">📚 Wikipedia Search</span><button class="icon-btn"
+          onclick="closeModal('wikipedia-modal')">✕</button></div>
+      <div class="form-row"><input type="text" id="wikipedia-query" placeholder="Enter topic (e.g., India, Python, AI)"
+          onkeypress="if(event.key==='Enter')fetchWikipedia()"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+        <button class="btn-sm-outline" onclick="closeModal('wikipedia-modal')">Cancel</button>
+        <button class="btn-sm-filled" onclick="fetchWikipedia()">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RENAME MODAL -->
+  <div id="rename-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">✏️ Rename Chat</span><button class="icon-btn"
+          onclick="closeModal('rename-modal')">✕</button></div>
+      <div class="form-row"><input type="text" id="rename-input" placeholder="New chat title..."></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-sm-outline" onclick="closeModal('rename-modal')">Cancel</button>
+        <button class="btn-sm-filled" onclick="confirmRename()">Rename</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TASK MODAL -->
+  <div id="task-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">✅ Add Task</span><button class="icon-btn"
+          onclick="closeModal('task-modal')">✕</button></div>
+      <div class="form-row"><input type="text" id="task-input" placeholder="What needs to be done?"></div>
+      <div class="form-row">
+        <label>Priority</label>
+        <div class="priority-row">
+          <button class="priority-btn active" data-priority="normal" onclick="selectPriority(this)">Normal</button>
+          <button class="priority-btn" data-priority="high" onclick="selectPriority(this)"
+            style="border-color:rgba(246,173,85,0.3);color:#f6ad55;">🔥 High</button>
+          <button class="priority-btn" data-priority="urgent" onclick="selectPriority(this)"
+            style="border-color:rgba(252,129,129,0.3);color:#fc8181;">🚨 Urgent</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button class="btn-sm-outline" onclick="closeModal('task-modal')">Cancel</button>
+        <button class="btn-sm-filled" onclick="confirmAddTask()">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MESSAGE MODAL -->
+  <div id="edit-msg-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">✏️ Edit Message</span><button class="icon-btn"
+          onclick="closeModal('edit-msg-modal')">✕</button></div>
+      <div class="form-row"><textarea id="edit-msg-input" rows="4" placeholder="Edit your message..."></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-sm-outline" onclick="closeModal('edit-msg-modal')">Cancel</button>
+        <button class="btn-sm-filled" onclick="confirmEditMsg()">Save & Resend</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT MODAL -->
+  <div id="export-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">📥 Export Chat</span><button class="icon-btn"
+          onclick="closeModal('export-modal')">✕</button></div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">Download this conversation in your preferred
+        format.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="export-btn" onclick="doExport('txt')">📄 Export as Plain Text (.txt)</button>
+        <button class="export-btn" onclick="doExport('json')">🗂️ Export as JSON (.json)</button>
+      </div>
+      <div style="margin-top:16px;text-align:right;">
+        <button class="btn-sm-outline" onclick="closeModal('export-modal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYBOARD SHORTCUTS MODAL -->
+  <div id="shortcuts-modal" class="overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><span class="modal-title">⌨️ Keyboard Shortcuts</span><button class="icon-btn"
+          onclick="closeModal('shortcuts-modal')">✕</button></div>
+      <div class="shortcuts-grid">
+        <div class="shortcut-row"><kbd>Enter</kbd><span>Send message</span></div>
+        <div class="shortcut-row"><kbd>Shift+Enter</kbd><span>New line</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+N</kbd><span>New chat</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+/</kbd><span>Show shortcuts</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Search chats</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+E</kbd><span>Export chat</span></div>
+        <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal / clear input</span></div>
+        <div class="shortcut-row"><kbd>Ctrl+B</kbd><span>Toggle sidebar</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT CONTEXT MENU -->
+  <div id="chat-ctx-menu" class="ctx-menu hidden">
+    <div class="ctx-item" onclick="ctxShare()">🔗 Share Link</div>
+    <div class="ctx-item" onclick="ctxRename()">✏️ Rename</div>
+    <div class="ctx-item" onclick="ctxPin()">📌 <span id="ctx-pin-label">Pin Chat</span></div>
+    <div class="ctx-item" onclick="ctxSave()">💾 <span id="ctx-save-label">Save Chat</span></div>
+    <div class="ctx-item" onclick="ctxExport()">📥 Export</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item ctx-danger" onclick="ctxDelete()">🗑️ Delete</div>
+  </div>
+
+  <!-- DIARY CONTEXT MENU -->
+  <div id="diary-ctx-menu" class="ctx-menu hidden">
+    <div class="ctx-item" onclick="diaryCtxEdit()">✏️ Edit</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item ctx-danger" onclick="diaryCtxDelete()">🗑️ Delete</div>
+  </div>
+
+  <!-- ═══ MAIN LAYOUT ═════════════════════════════════════════════════════ -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+  <div class="app-layout">
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- CHAT SIDEBAR -->
+      <div id="chat-sidebar" class="sidebar-content">
+        <div class="sidebar-top">
+          <button class="logo-btn" onclick="openModelPicker()" title="Switch AI Model">
+            <div class="logo-icon-sm">N</div>
+            <div class="logo-text-sm">NEXA</div>
+          </button>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle theme">🌙</button>
+            <button class="icon-btn" onclick="toggleSidebar()" id="sidebar-close-btn" title="Collapse">☰</button>
           </div>
         </div>
-      </div>
 
-      <!-- User -->
-      <div class="sidebar-bottom">
-        <div class="user-row-bottom" onclick="openProfileModal()" style="cursor:pointer;" title="Edit profile">
-          <div class="user-avatar-circle" id="automation-sidebar-avatar">G</div>
-          <div class="user-info-col">
-            <div class="user-name-small" id="automation-sidebar-username">Guest</div>
-            <div class="user-mode-label">Automation Mode</div>
-          </div>
+        <!-- Search -->
+        <div class="sidebar-search">
+          <span class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg></span>
+          <input type="text" id="chat-search" placeholder="Search chats... (Ctrl+K)" oninput="filterChats()">
         </div>
-        <div style="display:flex;gap:4px;">
-          <button class="icon-btn" onclick="openModal('shortcuts-modal')" title="Keyboard shortcuts">⌨️</button>
-          <button class="icon-btn" id="automation-logout-btn" onclick="doLogout()" title="Logout" style="display:none;">⎋</button>
-        </div>
-      </div>
-    </div>
-  </aside>
 
-  <!-- ── MAIN AREA ───────────────────────────────────────── -->
-  <main class="main-area">
-
-    <!-- HEADER -->
-    <header class="chat-header">
-      <div class="header-left">
-        <button class="icon-btn" onclick="toggleSidebar()" id="sidebar-open-btn" style="display:none;" title="Open sidebar">☰</button>
-        <div class="model-badge" onclick="openModelPicker()" id="model-badge-display" title="Switch model">
-          <span id="model-badge-icon">🧠</span>
-          <span id="model-badge-name">Nexa Pro</span>
-          <span class="badge-arrow">▾</span>
-        </div>
-      </div>
-
-      <nav class="header-nav">
-        <a href="/" class="nav-link">Home</a>
-        <a href="/#about" class="nav-link">About</a>
-        <a href="/#features" class="nav-link">Features</a>
-        <a href="/#contact" class="nav-link">Contact</a>
-      </nav>
-
-      <div class="header-right">
-        <div class="model-badge" onclick="openModeSelector()" id="mode-badge-display" title="Switch mode">
-          <span id="mode-badge-icon">💬</span>
-          <span id="mode-badge-name">Chat</span>
-          <span class="badge-arrow">▾</span>
-        </div>
-        <button class="hdr-btn" onclick="saveCurrentChat()" id="save-chat-btn" title="Save chat">💾</button>
-        <button class="hdr-btn" onclick="openModal('export-modal')" id="export-btn" title="Export chat">📥</button>
-        <button class="hdr-btn" onclick="shareCurrentChat()" title="Share chat">🔗</button>
-        <button class="hdr-btn danger" onclick="deleteCurrentChat()" title="Delete chat">🗑️</button>
-        <button class="hdr-btn user-btn" onclick="toggleProfileMenu()" id="header-auth-btn" title="Profile">
-          <span id="header-avatar-letter">👤</span>
-        </button>
-        <!-- Profile Dropdown Menu -->
-        <div id="profile-menu" class="profile-dropdown hidden">
-          <div class="profile-menu-item" onclick="openProfileModal();toggleProfileMenu()">⚙️ Settings</div>
-          <div class="profile-menu-item danger" onclick="doLogout();toggleProfileMenu()">🚪 Logout</div>
-        </div>
-      </div>
-    </header>
-
-    <!-- CHAT AREA -->
-    <div class="chat-area" id="chat-area">
-      <div class="welcome-screen" id="welcome-screen">
-        <div class="welcome-glow"></div>
-        <h2 class="welcome-title">Good <span id="time-greeting">Day</span>!</h2>
-        <p class="welcome-sub">I'm <strong id="welcome-model-name">Nexa Pro</strong>. How can I help you today?</p>
-        <div class="welcome-suggestions desktop-only">
-          <button class="sug-btn" onclick="quickSend('Explain quantum computing in simple terms')">🔬 Explain quantum computing</button>
-          <button class="sug-btn" onclick="quickSend('Write a Python web scraper')">💻 Python web scraper</button>
-          <button class="sug-btn" onclick="quickSend('Help me write a professional email')">📧 Professional email</button>
-          <button class="sug-btn" onclick="quickSend('What are the top AI trends in 2025?')">🤖 AI trends 2025</button>
-          <button class="sug-btn" onclick="quickSend('Create a 7-day workout plan for beginners')">💪 Workout plan</button>
-          <button class="sug-btn" onclick="quickSend('Explain blockchain in simple terms')">⛓️ Explain blockchain</button>
-        </div>
-      </div>
-
-      <div id="messages-container" class="messages-container"></div>
-
-      <div id="typing-indicator" class="typing-indicator hidden">
-        <div class="typing-avatar">N</div>
-        <div class="typing-bubble">
-          <div class="typing-dots"><span></span><span></span><span></span></div>
-          <span class="typing-text" id="typing-text">Thinking...</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- AUTOMATION AREA -->
-    <div class="automation-area hidden" id="automation-area">
-      <div class="automation-welcome">
-        <div class="welcome-glow"></div>
-        <h2 class="welcome-title">🤖 <span>Automation</span> Mode</h2>
-        <p class="welcome-sub">Automate your workflows and tasks with AI-powered automation</p>
-        <div class="automation-placeholder">
-          <div class="placeholder-icon">🚧</div>
-          <h3 class="placeholder-title">Coming Soon</h3>
-          <p class="placeholder-text">This feature is under development. Stay tuned for powerful automation capabilities!</p>
-          <div class="placeholder-features">
-            <div class="feature-chip">⚡ Workflow Automation</div>
-            <div class="feature-chip">🔄 Task Scheduling</div>
-            <div class="feature-chip">🎯 Smart Triggers</div>
-            <div class="feature-chip">📊 Analytics Dashboard</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- INPUT AREA -->
-    <div class="input-area">
-      <div class="input-box" id="input-box">
-        <div style="position: relative;">
-          <button class="input-icon-btn" id="attach-btn" onclick="toggleAttachMenu()" title="Attach files">+</button>
-          
-          <!-- ATTACH MENU -->
-          <div class="attach-menu hidden" id="attach-menu">
-            <button class="attach-option" onclick="attachPhoto()">Photo</button>
-            <button class="attach-option" onclick="attachFile()">File</button>
-          </div>
-        </div>
-        
-        <!-- FILE PREVIEW -->
-        <div id="file-preview" class="file-preview hidden"></div>
-        
-        <textarea
-          id="message-input"
-          placeholder="Message Nexa AI..."
-          rows="1"
-          onkeydown="handleKeyDown(event)"
-          oninput="handleInputChange(this)"
-          onpaste="handlePaste(event)"
-          maxlength="4000"
-        ></textarea>
-        <div class="input-actions">
-          <button class="input-icon-btn" id="web-search-btn" onclick="toggleWebSearch()" title="Toggle web search">🌐</button>
-          <button class="input-icon-btn" id="mic-btn" onclick="toggleMic()" title="Voice input (click to record)">🎙️</button>
-          <button class="input-icon-btn active" id="speaker-btn" onclick="toggleSpeaker()" title="Toggle voice output">🔊</button>
-          <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send message (Enter)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        <!-- Actions -->
+        <div class="sidebar-section">
+          <button class="sidebar-action-btn primary-action" onclick="newChat()">
+            <span>N</span> New Chat
+          </button>
+          <button class="sidebar-action-btn" onclick="newTempChat()">
+            <span>⏱</span> Temporary Chat
           </button>
         </div>
-      </div>
-      
-      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
-      <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
-      
-      <div class="input-footer">
-        <span id="mic-status" class="mic-status-label"></span>
-        <span id="char-counter" class="char-counter"></span>
-        <span class="input-hint desktop-only">Nexa AI can make mistakes. Verify important info. Made by <a href="https://harshcodeing1234.github.io/Portfolio/" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600;">Harsh</a></span>
-      </div>
-    </div>
 
-  </main>
-</div>
+        <!-- Quick Commands -->
+        <div class="sidebar-section">
+          <div class="sidebar-label">⚡ Quick Commands</div>
+          <div class="quick-commands">
+            <button class="qcmd" onclick="fetchIndiaNews()">🇮🇳 India News</button>
+            <button class="qcmd" onclick="openWikipediaModal()">📚 Wikipedia</button>
+            <button class="qcmd" onclick="insertQuickCmd('Explain this in simple terms: ')">💡 Explain</button>
+            <button class="qcmd" onclick="insertQuickCmd('Summarize: ')">📋 Summarize</button>
+            <button class="qcmd" onclick="insertQuickCmd('Write code for: ')">💻 Code</button>
+            <button class="qcmd" onclick="insertQuickCmd('Translate to Hindi: ')">🌐 Translate</button>
+            <button class="qcmd" onclick="insertQuickCmd('Improve this text: ')">✏️ Improve</button>
+            <button class="qcmd" onclick="insertQuickCmd('Step-by-step guide for: ')">📝 Steps</button>
+            <button class="qcmd" onclick="insertQuickCmd('Debug this code: ')">🐛 Debug</button>
+            <button class="qcmd" onclick="insertQuickCmd('Give pros and cons of: ')">⚖️ Pros/Cons</button>
+          </div>
+        </div>
 
-<script type="module" src="/static/js/chat.js"></script>
+        <!-- Pinned -->
+        <div class="sidebar-section" id="pinned-section" style="display:none;">
+          <div class="sidebar-label">📌 Pinned</div>
+          <div id="pinned-list" class="chat-list"></div>
+        </div>
+
+        <!-- Saved -->
+        <div class="sidebar-section" id="saved-section" style="display:none;">
+          <div class="sidebar-label">💾 Saved</div>
+          <div id="saved-list" class="chat-list"></div>
+        </div>
+
+        <!-- Recent -->
+        <div class="sidebar-section flex-grow">
+          <div class="sidebar-label">🕐 Recent</div>
+          <div id="all-chats-list" class="chat-list">
+            <div class="empty-list-hint">No chats yet. Start a new one!</div>
+          </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="sidebar-section task-section">
+          <div class="sidebar-label-row">
+            <span>✅ Tasks <span id="tasks-count" class="task-count-badge"></span></span>
+            <button class="icon-btn-sm" onclick="openModal('task-modal')" title="Add task">+</button>
+          </div>
+          <div id="task-list" class="task-list"></div>
+        </div>
+
+        <!-- User -->
+        <div class="sidebar-bottom">
+          <div class="user-row-bottom" onclick="openProfileModal()" style="cursor:pointer;" title="Edit profile">
+            <div class="user-avatar-circle" id="sidebar-avatar">G</div>
+            <div class="user-info-col">
+              <div class="user-name-small" id="sidebar-username">Guest</div>
+              <div class="user-mode-label" id="sidebar-mode">Guest Mode</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="icon-btn" onclick="openModal('shortcuts-modal')" title="Keyboard shortcuts">⌨️</button>
+            <button class="icon-btn" id="logout-btn" onclick="doLogout()" title="Logout"
+              style="display:none;">⎋</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUTOMATION SIDEBAR -->
+      <div id="automation-sidebar" class="sidebar-content hidden">
+        <div class="sidebar-top">
+          <button class="logo-btn" title="Nexa AI">
+            <div class="logo-icon-sm">N</div>
+            <div class="logo-text-sm">NEXA</div>
+          </button>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+            <button class="icon-btn" onclick="toggleSidebar()" title="Collapse">☰</button>
+          </div>
+        </div>
+
+        <!-- Automation Actions -->
+        <div class="sidebar-section">
+          <button class="sidebar-action-btn primary-action" onclick="createWorkflow()">
+            <span>⚡</span> New Workflow
+          </button>
+          <button class="sidebar-action-btn" onclick="openTemplates()">
+            <span>📋</span> Templates
+          </button>
+        </div>
+
+        <!-- Workflows -->
+        <div class="sidebar-section flex-grow">
+          <div class="sidebar-label">🔄 Workflows</div>
+          <div class="chat-list" id="workflow-list">
+            <div class="empty-list-hint">No workflows yet. Create one!</div>
+          </div>
+        </div>
+
+        <!-- Automation Stats -->
+        <div class="sidebar-section">
+          <div class="sidebar-label" style="cursor:pointer;" onclick="openStatusPanel()">📊 Status</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--muted);">Active</span>
+              <span style="color:var(--success);font-weight:600;" id="active-workflows">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+              <span style="color:var(--muted);">Completed</span>
+              <span style="color:var(--accent);font-weight:600;" id="completed-workflows">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User -->
+        <div class="sidebar-bottom">
+          <div class="user-row-bottom" onclick="openProfileModal()" style="cursor:pointer;" title="Edit profile">
+            <div class="user-avatar-circle" id="automation-sidebar-avatar">G</div>
+            <div class="user-info-col">
+              <div class="user-name-small" id="automation-sidebar-username">Guest</div>
+              <div class="user-mode-label">Automation Mode</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="icon-btn" onclick="openModal('shortcuts-modal')" title="Keyboard shortcuts">⌨️</button>
+            <button class="icon-btn" id="automation-logout-btn" onclick="doLogout()" title="Logout"
+              style="display:none;">⎋</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIARY SIDEBAR -->
+      <div id="diary-sidebar" class="sidebar-content hidden">
+        <div class="sidebar-top">
+          <button class="logo-btn" title="Nexa AI">
+            <div class="logo-icon-sm">N</div>
+            <div class="logo-text-sm">NEXA</div>
+          </button>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+            <button class="icon-btn" onclick="toggleSidebar()" title="Collapse">☰</button>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="sidebar-search">
+          <span class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg></span>
+          <input type="text" id="diary-search" placeholder="Search entries..." oninput="searchDiaryEntries()">
+        </div>
+
+        <div class="sidebar-section">
+          <button class="sidebar-action-btn primary-action" onclick="newDiaryEntry()">
+            <span>+</span> New Entry
+          </button>
+        </div>
+
+        <div class="sidebar-section flex-grow">
+          <div class="sidebar-label">🕐 Recent</div>
+          <div id="diary-list" class="chat-list">
+            <div class="empty-list-hint">No entries yet. Start writing!</div>
+          </div>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="user-row-bottom" onclick="openProfileModal()" style="cursor:pointer;" title="Edit profile">
+            <div class="user-avatar-circle" id="diary-sidebar-avatar">G</div>
+            <div class="user-info-col">
+              <div class="user-name-small" id="diary-sidebar-username">Guest</div>
+              <div class="user-mode-label">Diary Mode</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="icon-btn" onclick="openModal('shortcuts-modal')" title="Keyboard shortcuts">⌨️</button>
+            <button class="icon-btn" id="diary-logout-btn" onclick="doLogout()" title="Logout"
+              style="display:none;">⎋</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN AREA ───────────────────────────────────────── -->
+    <main class="main-area">
+
+      <!-- HEADER -->
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="icon-btn" onclick="toggleSidebar()" id="sidebar-open-btn" style="display:none;"
+            title="Open sidebar">☰</button>
+          <div class="model-badge" onclick="openModelPicker()" id="model-badge-display" title="Switch model">
+            <span id="model-badge-icon">🧠</span>
+            <span id="model-badge-name">Nexa Pro</span>
+            <span class="badge-arrow">▾</span>
+          </div>
+        </div>
+
+        <nav class="header-nav">
+          <a href="/" class="nav-link">Home</a>
+          <a href="/#about" class="nav-link">About</a>
+          <a href="/#features" class="nav-link">Features</a>
+          <a href="/#contact" class="nav-link">Contact</a>
+        </nav>
+
+        <div class="header-right">
+          <div class="model-badge" onclick="openModeSelector()" id="mode-badge-display" title="Switch mode">
+            <span id="mode-badge-icon">💬</span>
+            <span id="mode-badge-name">Chat</span>
+            <span class="badge-arrow">▾</span>
+          </div>
+          <button class="hdr-btn" onclick="saveCurrentChat()" id="save-chat-btn" title="Save chat">💾</button>
+          <button class="hdr-btn" onclick="openModal('export-modal')" id="export-btn" title="Export chat">📥</button>
+          <button class="hdr-btn" onclick="shareCurrentChat()" title="Share chat">🔗</button>
+          <button class="hdr-btn danger" onclick="deleteCurrentChat()" title="Delete chat">🗑️</button>
+          <button class="hdr-btn user-btn" onclick="toggleProfileMenu()" id="header-auth-btn" title="Profile">
+            <span id="header-avatar-letter">👤</span>
+          </button>
+          <!-- Profile Dropdown Menu -->
+          <div id="profile-menu" class="profile-dropdown hidden">
+            <div class="profile-menu-item" onclick="openProfileModal();toggleProfileMenu()">⚙️ Settings</div>
+            <div class="profile-menu-item danger" onclick="doLogout();toggleProfileMenu()">🚪 Logout</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CHAT AREA -->
+      <div class="chat-area" id="chat-area">
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-glow"></div>
+          <h2 class="welcome-title">Good <span id="time-greeting">Day</span>!</h2>
+          <p class="welcome-sub">I'm <strong id="welcome-model-name">Nexa Pro</strong>. How can I help you today?</p>
+          <div class="welcome-suggestions desktop-only">
+            <button class="sug-btn" onclick="quickSend('Explain quantum computing in simple terms')">🔬 Explain quantum
+              computing</button>
+            <button class="sug-btn" onclick="quickSend('Write a Python web scraper')">💻 Python web scraper</button>
+            <button class="sug-btn" onclick="quickSend('Help me write a professional email')">📧 Professional
+              email</button>
+            <button class="sug-btn" onclick="quickSend('What are the top AI trends in 2025?')">🤖 AI trends
+              2025</button>
+            <button class="sug-btn" onclick="quickSend('Create a 7-day workout plan for beginners')">💪 Workout
+              plan</button>
+            <button class="sug-btn" onclick="quickSend('Explain blockchain in simple terms')">⛓️ Explain
+              blockchain</button>
+          </div>
+        </div>
+
+        <div id="messages-container" class="messages-container"></div>
+
+        <div id="typing-indicator" class="typing-indicator hidden">
+          <div class="typing-avatar">N</div>
+          <div class="typing-bubble">
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+            <span class="typing-text" id="typing-text">Thinking...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUTOMATION AREA -->
+      <div class="automation-area hidden" id="automation-area">
+        <div class="automation-welcome">
+          <div class="welcome-glow"></div>
+          <h2 class="welcome-title"><span>Automation</span> Mode</h2>
+          <p class="welcome-sub">Daily automation updates via Telegram bot</p>
+
+          <div class="automation-content">
+            <div class="automation-card">
+              <div class="card-icon"></div>
+              <h3>Telegram Bot Active</h3>
+              <p>Get daily updates on:</p>
+              <ul>
+                <li>Top 5 India News</li>
+                <li>Stock Market (NIFTY 50)</li>
+                <li>Latest AI Research Papers</li>
+                <li>Job Market Updates</li>
+                <li>Learning Resources</li>
+              </ul>
+            </div>
+
+            <div class="automation-card">
+              <div class="card-icon"></div>
+              <h3>How to Use</h3>
+              <ol>
+                <li>Open Telegram app</li>
+                <li>Search for your bot</li>
+                <li>Send <code>/start</code></li>
+                <li>Enter your name</li>
+                <li>Get daily updates!</li>
+              </ol>
+            </div>
+
+            <div class="automation-card">
+              <div class="card-icon">⚙️</div>
+              <h3>Bot Status</h3>
+              <p id="bot-status">🟢 Running</p>
+              <button class="btn-primary" onclick="checkBotStatus()">Check Status</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIARY AREA -->
+      <div class="chat-area hidden" id="diary-area">
+        <div class="welcome-screen" id="diary-welcome-screen">
+          <div class="welcome-glow"></div>
+          <h2 class="welcome-title"><span>Personal</span> Diary</h2>
+          <p class="welcome-sub">Write your thoughts, memories, and daily reflections</p>
+          <button onclick="newDiaryEntry()"
+            style="margin-top:32px;display:flex;align-items:center;gap:10px;padding:14px 28px;background:var(--accent);border:none;border-radius:10px;color:#000;cursor:pointer;font-size:16px;font-weight:600;transition:all 0.2s;"
+            onmouseover="this.style.background='#4a9fd8'" onmouseout="this.style.background='var(--accent)'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            New Entry
+          </button>
+        </div>
+
+        <div id="diary-entry-form" style="display:none;height:100%;width:100%;padding:24px;overflow-y:auto;">
+          <div
+            style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.1);max-width:1200px;margin:0 auto;height:calc(100% - 48px);display:flex;flex-direction:column;">
+            <div style="margin-bottom:20px;">
+              <label
+                style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;">Title</label>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0;">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <input type="text" id="diary-title" placeholder="Enter title..."
+                  style="flex:1;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;font-weight:600;outline:none;transition:all 0.2s;"
+                  onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              </div>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;margin-bottom:20px;">
+              <label
+                style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;">Content</label>
+              <div style="position:relative;flex:1;display:flex;flex-direction:column;">
+                <div style="position:absolute;top:16px;left:16px;color:var(--muted);z-index:1;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                </div>
+                <textarea id="diary-content" placeholder="Write your entry..."
+                  style="flex:1;width:100%;padding:16px 16px 16px 48px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;line-height:1.8;resize:none;font-family:inherit;outline:none;transition:all 0.2s;"
+                  onfocus="this.style.borderColor='var(--accent)'"
+                  onblur="this.style.borderColor='var(--border)'"></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+              <button onclick="cancelDiaryEntry()"
+                style="display:flex;align-items:center;gap:8px;padding:12px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;"
+                onmouseover="this.style.background='var(--surface3)'"
+                onmouseout="this.style.background='var(--surface2)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Cancel
+              </button>
+              <button onclick="saveDiaryEntryNew()"
+                style="display:flex;align-items:center;gap:8px;padding:12px 24px;background:var(--accent);border:none;border-radius:8px;color:#000;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;"
+                onmouseover="this.style.background='#4a9fd8'" onmouseout="this.style.background='var(--accent)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Entry
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="diary-view" style="display:none;height:100%;width:100%;padding:24px;overflow-y:auto;">
+          <div
+            style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);max-width:1200px;margin:0 auto;min-height:calc(100% - 48px);display:flex;flex-direction:column;">
+            <div
+              style="display:flex;justify-content:space-between;align-items:start;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);">
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">Title</div>
+                <h2 id="diary-view-title" style="font-size:32px;font-weight:700;color:var(--text);line-height:1.2;">
+                </h2>
+              </div>
+              <div style="display:flex;gap:8px;margin-left:16px;">
+                <button onclick="exportDiaryPDF()"
+                  style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;transition:all 0.2s;flex-shrink:0;"
+                  onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"
+                  title="Export PDF">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </button>
+                <button onclick="editDiaryEntryNew()"
+                  style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;transition:all 0.2s;flex-shrink:0;"
+                  onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                  onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" title="Edit">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button onclick="deleteDiaryEntryNew()"
+                  style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#ef4444;cursor:pointer;transition:all 0.2s;flex-shrink:0;"
+                  onmouseover="this.style.borderColor='#ef4444';this.style.background='rgba(239,68,68,0.1)'"
+                  onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
+                  title="Delete">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div style="flex:1;margin-bottom:24px;">
+              <div style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:12px;">Content</div>
+              <div id="diary-view-content" style="color:var(--text2);line-height:1.8;font-size:16px;"></div>
+            </div>
+            <div id="diary-view-dates"
+              style="display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Created: <span id="diary-created-date"></span></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Edited: <span id="diary-edited-date"></span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INPUT AREA -->
+      <div class="input-area">
+        <div class="input-box" id="input-box">
+          <div style="position: relative;">
+            <button class="input-icon-btn" id="attach-btn" onclick="toggleAttachMenu()" title="Attach files">+</button>
+
+            <!-- ATTACH MENU -->
+            <div class="attach-menu hidden" id="attach-menu">
+              <button class="attach-option" onclick="attachPhoto()">Photo</button>
+              <button class="attach-option" onclick="attachFile()">File</button>
+            </div>
+          </div>
+
+          <!-- FILE PREVIEW -->
+          <div id="file-preview" class="file-preview hidden"></div>
+
+          <textarea id="message-input" placeholder="Message Nexa AI..." rows="1" onkeydown="handleKeyDown(event)"
+            oninput="handleInputChange(this)" onpaste="handlePaste(event)" maxlength="4000"></textarea>
+          <div class="input-actions">
+            <button class="input-icon-btn" id="web-search-btn" onclick="toggleWebSearch()"
+              title="Toggle web search">🌐</button>
+            <button class="input-icon-btn" id="mic-btn" onclick="toggleMic()"
+              title="Voice input (click to record)">🎙️</button>
+            <button class="input-icon-btn active" id="speaker-btn" onclick="toggleSpeaker()"
+              title="Toggle voice output">🔊</button>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send message (Enter)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+        <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
+
+        <div class="input-footer">
+          <span id="mic-status" class="mic-status-label"></span>
+          <span id="char-counter" class="char-counter"></span>
+          <span class="input-hint desktop-only">Nexa AI can make mistakes. Verify important info. Made by <a
+              href="https://harshcodeing1234.github.io/Portfolio/" target="_blank"
+              style="color:var(--accent);text-decoration:none;font-weight:600;">Harsh</a></span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module" src="/static/js/chat.js"></script>
 </body>
+
 </html>

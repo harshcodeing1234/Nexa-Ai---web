@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash #type:
 from werkzeug.utils import secure_filename #type:ignore
 from openai import OpenAI #type:ignore
 import sqlite3, os, json, re, secrets, logging, html, sys
+import urllib.request, urllib.parse, urllib.error
 import bleach #type:ignore
 from functools import wraps
 from datetime import datetime, timedelta
@@ -39,16 +40,17 @@ validate_environment()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24).hex())
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SECURE'] = False  # Changed to False for local network
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Changed from Strict to Lax
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 2592000  # 30 days in seconds
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'nexa_ai.db')
+DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(os.path.dirname(__file__), 'nexa_ai.db'))
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'photos')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx', 'csv', 'xlsx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
 # OpenAI client setup
 api_key = os.environ.get('SAMBANOVA_API_KEY', '')
@@ -162,9 +164,11 @@ def allowed_file(filename):
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     return conn
 
 def init_db():
@@ -206,6 +210,15 @@ def init_db():
                 completed INTEGER DEFAULT 0,
                 priority TEXT DEFAULT 'normal',
                 created_at TEXT DEFAULT (datetime('now'))
+            );
+            CREATE TABLE IF NOT EXISTS diary_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                session_id TEXT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
             );
         ''')
         
@@ -262,6 +275,10 @@ def auth():
 
 @app.route('/chat')
 def chat_page():
+    return render_template('chat.html')
+
+@app.route('/diary')
+def diary_page():
     return render_template('chat.html')
 
 @app.route('/uploads/files/<path:filename>')
@@ -977,7 +994,86 @@ def delete_task(tid):
         logger.error(f"Delete task error: {e}")
         return jsonify({'error': 'Failed to delete task'}), 500
 
+# ─── Diary API ─────────────────────────────────────────────────────────────────
+@app.route('/api/diary', methods=['GET'])
+def get_diary_entries():
+    uid = session.get('user_id')
+    sid = request.args.get('session_id', '')
+    try:
+        with get_db() as db:
+            if uid:
+                rows = db.execute('SELECT * FROM diary_entries WHERE user_id=? ORDER BY updated_at DESC', (uid,)).fetchall()
+            else:
+                rows = db.execute('SELECT * FROM diary_entries WHERE session_id=? ORDER BY updated_at DESC', (sid,)).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        logger.error(f"Get diary entries error: {e}")
+        return jsonify({'error': 'Failed to load entries'}), 500
+
+@app.route('/api/diary', methods=['POST'])
+@rate_limit(max_requests=30, window=60)
+@csrf_required
+def add_diary_entry():
+    try:
+        d = request.json
+        title = d.get('title', 'Untitled').strip()
+        content = d.get('content', '').strip()
+        if not content:
+            return jsonify({'error': 'Content required'}), 400
+        
+        uid = session.get('user_id')
+        sid = d.get('session_id', '')
+        
+        with get_db() as db:
+            cur = db.execute(
+                'INSERT INTO diary_entries (user_id, session_id, title, content) VALUES (?,?,?,?)',
+                (uid, sid, title, content)
+            )
+            db.commit()
+            entry = db.execute('SELECT * FROM diary_entries WHERE id=?', (cur.lastrowid,)).fetchone()
+        return jsonify(dict(entry))
+    except Exception as e:
+        logger.error(f"Add diary entry error: {e}")
+        return jsonify({'error': 'Failed to create entry'}), 500
+
+@app.route('/api/diary/<int:eid>', methods=['PATCH'])
+@csrf_required
+def update_diary_entry(eid):
+    try:
+        d = request.json
+        with get_db() as db:
+            if 'title' in d and 'content' in d:
+                db.execute('UPDATE diary_entries SET title=?, content=?, updated_at=datetime("now") WHERE id=?', 
+                          (d['title'], d['content'], eid))
+            elif 'title' in d:
+                db.execute('UPDATE diary_entries SET title=?, updated_at=datetime("now") WHERE id=?', (d['title'], eid))
+            elif 'content' in d:
+                db.execute('UPDATE diary_entries SET content=?, updated_at=datetime("now") WHERE id=?', (d['content'], eid))
+            db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Update diary entry error: {e}")
+        return jsonify({'error': 'Failed to update entry'}), 500
+
+@app.route('/api/diary/<int:eid>', methods=['DELETE'])
+@csrf_required
+def delete_diary_entry(eid):
+    try:
+        with get_db() as db:
+            db.execute('DELETE FROM diary_entries WHERE id=?', (eid,))
+            db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Delete diary entry error: {e}")
+        return jsonify({'error': 'Failed to delete entry'}), 500
+
 # ─── Stats API ─────────────────────────────────────────────────────────────────
+@app.route('/api/bot-status')
+def bot_status():
+    bot_path = os.path.join(os.path.dirname(__file__), 'automation', 'bot.py')
+    running = os.path.exists(bot_path)
+    return jsonify({'running': running})
+
 @app.route('/api/stats')
 def get_stats():
     uid = session.get('user_id')
@@ -1202,6 +1298,7 @@ def fetch_india_news():
     """Fetch top 20 breaking news from India using NewsAPI"""
     api_key = os.environ.get('NEWSAPI_KEY', '')
     if not api_key or api_key == 'your_newsapi_key_here':
+        logger.warning("NewsAPI key not configured")
         return "NewsAPI key not configured. Get your free key from https://newsapi.org"
     
     try:
@@ -1214,23 +1311,39 @@ def fetch_india_news():
             f"https://newsapi.org/v2/everything?q=India&sortBy=publishedAt&pageSize=20&language=en&apiKey={api_key}"
         ]
         
+        articles = []
+        last_error = None
+        
         for url in urls:
             try:
-                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req, timeout=10) as response:
+                req = urllib.request.Request(url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json'
+                })
+                with urllib.request.urlopen(req, timeout=15) as response:
                     data = json.loads(response.read())
                 
                 if data.get('status') != 'ok':
+                    last_error = data.get('message', 'API returned non-ok status')
+                    logger.warning(f"NewsAPI error: {last_error}")
                     continue
                 
                 articles = data.get('articles', [])
                 if articles:
+                    logger.info(f"Fetched {len(articles)} news articles")
                     break
-            except:
+            except urllib.error.HTTPError as e:
+                last_error = f"HTTP {e.code}: {e.reason}"
+                logger.error(f"NewsAPI HTTP error: {last_error}")
+            except Exception as e:
+                last_error = str(e)
+                logger.error(f"NewsAPI request error: {last_error}")
                 continue
         
         if not articles:
-            return "No breaking news found at the moment. Try again later."
+            error_msg = f"No breaking news found. {last_error if last_error else 'Try again later.'}"
+            logger.warning(error_msg)
+            return error_msg
         
         news_text = "<div style='padding:20px;background:var(--surface2);border-radius:12px;'>"
         news_text += "<h2 style='color:#63b3ed;margin-bottom:20px;font-size:24px;'>🇮🇳 Bharat ki Taaza Khabar</h2>"
@@ -1268,6 +1381,21 @@ def fetch_india_news():
 
 if __name__ == "__main__":
     logger.info("Starting Nexa AI application")
+    
+    # Start Telegram bot in background
+    import threading
+    import subprocess
+    def run_bot():
+        try:
+            bot_path = os.path.join(os.path.dirname(__file__), 'automation', 'bot.py')
+            if os.path.exists(bot_path):
+                subprocess.Popen(['python', bot_path])
+                logger.info("Telegram bot started")
+        except Exception as e:
+            logger.error(f"Bot start failed: {e}")
+    
+    threading.Thread(target=run_bot, daemon=True).start()
+    
     try:
         port = int(os.environ.get("PORT", 8080))
         app.run(host="0.0.0.0", port=port, debug=False)

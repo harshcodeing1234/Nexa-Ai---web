@@ -157,23 +157,29 @@ window.checkAuth = async function() {
     document.getElementById('sidebar-username').textContent = d.name;
     document.getElementById('sidebar-mode').textContent = d.email || 'Logged in';
     document.getElementById('automation-sidebar-username').textContent = d.name;
+    document.getElementById('diary-sidebar-username').textContent = d.name;
     
     // Set avatar
     const sidebarAvatar = document.getElementById('sidebar-avatar');
     const headerAvatar = document.getElementById('header-avatar-letter');
     const automationAvatar = document.getElementById('automation-sidebar-avatar');
+    const diaryAvatar = document.getElementById('diary-sidebar-avatar');
     
     if (d.photo) {
-      [sidebarAvatar, headerAvatar, automationAvatar].forEach(av => {
-        av.style.backgroundImage = `url(${d.photo})`;
-        av.style.backgroundSize = 'cover';
-        av.style.backgroundPosition = 'center';
-        av.textContent = '';
+      [sidebarAvatar, headerAvatar, automationAvatar, diaryAvatar].forEach(av => {
+        if (av) {
+          av.style.backgroundImage = `url(${d.photo})`;
+          av.style.backgroundSize = 'cover';
+          av.style.backgroundPosition = 'center';
+          av.textContent = '';
+        }
       });
     } else {
-      [sidebarAvatar, headerAvatar, automationAvatar].forEach(av => {
-        av.style.backgroundImage = 'none';
-        av.textContent = letter;
+      [sidebarAvatar, headerAvatar, automationAvatar, diaryAvatar].forEach(av => {
+        if (av) {
+          av.style.backgroundImage = 'none';
+          av.textContent = letter;
+        }
       });
     }
     
@@ -181,13 +187,16 @@ window.checkAuth = async function() {
     document.getElementById('header-auth-btn').style.color = '#fff';
     document.getElementById('logout-btn').style.display = 'flex';
     document.getElementById('automation-logout-btn').style.display = 'flex';
+    document.getElementById('diary-logout-btn').style.display = 'flex';
     if (d.theme) applyTheme(d.theme);
   } else {
     document.getElementById('sidebar-username').textContent = 'Guest Mode';
     document.getElementById('sidebar-mode').textContent = 'Not signed in';
     document.getElementById('automation-sidebar-username').textContent = 'Guest Mode';
+    document.getElementById('diary-sidebar-username').textContent = 'Guest Mode';
     document.getElementById('logout-btn').style.display = 'none';
     document.getElementById('automation-logout-btn').style.display = 'none';
+    document.getElementById('diary-logout-btn').style.display = 'none';
   }
 }
 
@@ -220,6 +229,13 @@ window.toggleSidebar = function() {
   if (backdrop) backdrop.classList.toggle('visible', !collapsed && window.innerWidth <= 768);
 }
 
+// Auto-collapse sidebar on mobile when clicking entry/chat
+window.autoCollapseSidebar = function() {
+  if (window.innerWidth <= 768) {
+    toggleSidebar();
+  }
+}
+
 // ═══ MODEL ════════════════════════════════════════════════════════════════════
 window.openModelPicker = function() {
   document.getElementById('model-overlay').classList.remove('hidden');
@@ -248,7 +264,8 @@ window.updateModelUI = function() {
 let currentMode = localStorage.getItem('currentMode') || 'chat';
 const MODES = {
   chat: { name: 'Chat', icon: '💬' },
-  automation: { name: 'Automation', icon: '🤖' }
+  automation: { name: 'Automation', icon: '🤖' },
+  diary: { name: 'Diary', icon: '📔' }
 };
 window.openModeSelector = function() {
   document.getElementById('mode-overlay').classList.remove('hidden');
@@ -272,24 +289,41 @@ window.updateModeUI = function() {
 window.switchInterface = function() {
   const chatArea = document.getElementById('chat-area');
   const automationArea = document.getElementById('automation-area');
+  const diaryArea = document.getElementById('diary-area');
   const inputArea = document.querySelector('.input-area');
   const chatSidebar = document.getElementById('chat-sidebar');
   const automationSidebar = document.getElementById('automation-sidebar');
+  const diarySidebar = document.getElementById('diary-sidebar');
   
   if (currentMode === 'chat') {
     chatArea.classList.remove('hidden');
     automationArea.classList.add('hidden');
+    if (diaryArea) diaryArea.classList.add('hidden');
     inputArea.style.display = 'flex';
     inputArea.classList.remove('hidden');
     chatSidebar.classList.remove('hidden');
     automationSidebar.classList.add('hidden');
-  } else {
+    if (diarySidebar) diarySidebar.classList.add('hidden');
+  } else if (currentMode === 'automation') {
     chatArea.classList.add('hidden');
     automationArea.classList.remove('hidden');
+    if (diaryArea) diaryArea.classList.add('hidden');
     inputArea.style.display = 'none';
     inputArea.classList.add('hidden');
     chatSidebar.classList.add('hidden');
     automationSidebar.classList.remove('hidden');
+    if (diarySidebar) diarySidebar.classList.add('hidden');
+    renderWorkflows();
+  } else if (currentMode === 'diary') {
+    chatArea.classList.add('hidden');
+    automationArea.classList.add('hidden');
+    if (diaryArea) diaryArea.classList.remove('hidden');
+    inputArea.style.display = 'none';
+    inputArea.classList.add('hidden');
+    chatSidebar.classList.add('hidden');
+    automationSidebar.classList.add('hidden');
+    if (diarySidebar) diarySidebar.classList.remove('hidden');
+    loadDiaryEntries();
   }
 }
 
@@ -1043,6 +1077,394 @@ window.confirmEditMsg = async function() {
 }
 
 // ═══ QUICK COMMANDS ═══════════════════════════════════════════════════════════
+// Diary Mode
+let diaryEntries = [];
+let currentDiaryId = null;
+
+if (!state) state = {};
+state.ctxMenuDiaryId = null;
+
+window.loadDiaryEntries = async function() {
+  try {
+    const sid = localStorage.getItem('session_id') || '';
+    diaryEntries = await fetchJSON(`/api/diary?session_id=${sid}`);
+    renderDiaryEntries();
+  } catch (e) {
+    console.error('Load diary entries error:', e);
+  }
+}
+
+window.renderDiaryEntries = function(filter = '') {
+  const list = document.getElementById('diary-list');
+  if (!list) return;
+  let filtered = diaryEntries;
+  if (filter) {
+    filtered = diaryEntries.filter(e => (e.title + ' ' + e.content).toLowerCase().includes(filter.toLowerCase()));
+  }
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-list-hint">No entries yet. Start writing!</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(e => {
+    const active = currentDiaryId === e.id ? 'active' : '';
+    return `
+      <div class="chat-item ${active}" onclick="viewDiaryEntry(${e.id})" id="diary-item-${e.id}">
+        <div class="chat-item-dot"></div>
+        <div class="chat-item-title">${escapeHtml(e.title || 'Untitled')}</div>
+        <button class="chat-item-btn" onclick="openDiaryCtxMenu(event,${e.id})" title="Options">⋯</button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.newDiaryEntry = function() {
+  currentDiaryId = null;
+  document.getElementById('diary-welcome-screen').style.display = 'none';
+  document.getElementById('diary-entry-form').style.display = 'block';
+  document.getElementById('diary-view').style.display = 'none';
+  document.getElementById('diary-title').value = '';
+  document.getElementById('diary-content').value = '';
+  document.getElementById('diary-title').focus();
+  autoCollapseSidebar();
+}
+
+window.viewDiaryEntry = function(id) {
+  const entry = diaryEntries.find(e => e.id === id);
+  if (!entry) return;
+  currentDiaryId = id;
+  document.getElementById('diary-welcome-screen').style.display = 'none';
+  document.getElementById('diary-entry-form').style.display = 'none';
+  document.getElementById('diary-view').style.display = 'block';
+  document.getElementById('diary-view-title').textContent = entry.title || 'Untitled';
+  
+  // Format created date as "March 2024"
+  const createdDate = new Date(entry.created_at);
+  const createdMonth = createdDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('diary-created-date').textContent = createdMonth;
+  
+  // Format edited date as "dd/mm/yy"
+  const editedDate = new Date(entry.updated_at);
+  const dd = String(editedDate.getDate()).padStart(2, '0');
+  const mm = String(editedDate.getMonth() + 1).padStart(2, '0');
+  const yy = String(editedDate.getFullYear()).slice(-2);
+  document.getElementById('diary-edited-date').textContent = `${dd}/${mm}/${yy}`;
+  
+  // Render markdown content
+  document.getElementById('diary-view-content').innerHTML = renderMarkdown(entry.content);
+  renderDiaryEntries();
+  autoCollapseSidebar();
+}
+
+window.renderMarkdown = function(text) {
+  if (!text) return '';
+  
+  // Escape HTML
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  
+  // Process line by line
+  const lines = html.split('\n');
+  let result = [];
+  let inList = false;
+  
+  for (let line of lines) {
+    const trimmed = line.trim();
+    
+    // List items
+    if (trimmed.match(/^[\*\-] /)) {
+      if (!inList) {
+        result.push('<ul style="margin:4px 0;padding-left:24px;">');
+        inList = true;
+      }
+      result.push('<li>' + trimmed.replace(/^[\*\-] /, '') + '</li>');
+    } 
+    // Headers
+    else if (trimmed.match(/^### /)) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      result.push('<h3 style="font-size:20px;font-weight:700;margin:8px 0 4px;color:var(--text);">' + trimmed.replace(/^### /, '') + '</h3>');
+    }
+    else if (trimmed.match(/^## /)) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      result.push('<h2 style="font-size:24px;font-weight:700;margin:10px 0 6px;color:var(--text);">' + trimmed.replace(/^## /, '') + '</h2>');
+    }
+    else if (trimmed.match(/^# /)) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      result.push('<h1 style="font-size:28px;font-weight:700;margin:12px 0 8px;color:var(--text);">' + trimmed.replace(/^# /, '') + '</h1>');
+    }
+    // Regular text
+    else if (trimmed) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      result.push(trimmed + '<br>');
+    }
+    // Empty line
+    else {
+      if (inList) { result.push('</ul>'); inList = false; }
+      if (result.length > 0) result.push('<br>');
+    }
+  }
+  
+  if (inList) result.push('</ul>');
+  html = result.join('');
+  
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:700;">$1</strong>');
+  
+  // Italic
+  html = html.replace(/\*(.*?)\*/g, '<em style="font-style:italic;">$1</em>');
+  
+  // Code inline
+  html = html.replace(/`(.*?)`/g, '<code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px;">$1</code>');
+  
+  // Links
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color:var(--accent);text-decoration:underline;" target="_blank">$1</a>');
+  
+  return html;
+}
+
+window.saveDiaryEntryNew = async function() {
+  const title = document.getElementById('diary-title').value.trim();
+  const content = document.getElementById('diary-content').value.trim();
+  if (!content) return alert('Please write something!');
+  
+  try {
+    const sid = localStorage.getItem('session_id') || '';
+    if (currentDiaryId) {
+      await fetchJSON(`/api/diary/${currentDiaryId}`, 'PATCH', { title: title || 'Untitled', content });
+    } else {
+      await fetchJSON('/api/diary', 'POST', { title: title || 'Untitled', content, session_id: sid });
+    }
+    
+    await loadDiaryEntries();
+    document.getElementById('diary-entry-form').style.display = 'none';
+    document.getElementById('diary-welcome-screen').style.display = 'flex';
+    currentDiaryId = null;
+    showToast('Entry saved', 'success');
+  } catch (e) {
+    showToast(e.message || 'Failed to save entry', 'error');
+  }
+}
+
+window.editDiaryEntryNew = function() {
+  if (!currentDiaryId) return;
+  const entry = diaryEntries.find(e => e.id === currentDiaryId);
+  document.getElementById('diary-view').style.display = 'none';
+  document.getElementById('diary-entry-form').style.display = 'block';
+  document.getElementById('diary-title').value = entry.title || '';
+  document.getElementById('diary-content').value = entry.content;
+  document.getElementById('diary-title').focus();
+}
+
+window.deleteDiaryEntryNew = async function() {
+  if (!currentDiaryId || !confirm('Delete this entry?')) return;
+  try {
+    await fetchJSON(`/api/diary/${currentDiaryId}`, 'DELETE');
+    await loadDiaryEntries();
+    currentDiaryId = null;
+    document.getElementById('diary-view').style.display = 'none';
+    document.getElementById('diary-welcome-screen').style.display = 'flex';
+    showToast('Entry deleted', 'success');
+  } catch (e) {
+    showToast(e.message || 'Failed to delete entry', 'error');
+  }
+}
+
+window.diaryCtxDelete = async function() {
+  if (!state.ctxMenuDiaryId || !confirm('Delete this entry?')) return;
+  try {
+    await fetchJSON(`/api/diary/${state.ctxMenuDiaryId}`, 'DELETE');
+    await loadDiaryEntries();
+    if (currentDiaryId === state.ctxMenuDiaryId) {
+      currentDiaryId = null;
+      document.getElementById('diary-view').style.display = 'none';
+      document.getElementById('diary-welcome-screen').style.display = 'flex';
+    }
+    showToast('Entry deleted', 'success');
+  } catch (e) {
+    showToast(e.message || 'Failed to delete entry', 'error');
+  }
+  closeDiaryCtx();
+}
+
+window.cancelDiaryEntry = function() {
+  document.getElementById('diary-entry-form').style.display = 'none';
+  if (currentDiaryId) {
+    viewDiaryEntry(currentDiaryId);
+  } else {
+    document.getElementById('diary-welcome-screen').style.display = 'flex';
+  }
+}
+
+window.saveDiaryEntry = function() {
+  // Old function - not used
+}
+
+window.newDiaryEntry_old = function() {
+  // Old function - not used
+}
+
+window.viewDiaryEntry_old = function(id) {
+  // Old function - not used
+}
+
+window.deleteDiaryEntry = function(id) {
+  // Old function - not used
+}
+
+window.toggleDiarySearch = function() {
+  // Not needed anymore - search always visible
+}
+
+window.searchDiaryEntries = function() {
+  const filter = document.getElementById('diary-search').value;
+  renderDiaryEntries(filter);
+}
+
+window.openDiaryCtxMenu = function(e, id) {
+  e.stopPropagation();
+  state.ctxMenuDiaryId = id;
+  const menu = document.getElementById('diary-ctx-menu');
+  menu.style.left = e.pageX + 'px';
+  menu.style.top = e.pageY + 'px';
+  menu.classList.remove('hidden');
+  setTimeout(() => document.addEventListener('click', closeDiaryCtx, {once: true}), 0);
+}
+
+window.closeDiaryCtx = function() {
+  const menu = document.getElementById('diary-ctx-menu');
+  if (menu) menu.classList.add('hidden');
+}
+
+window.diaryCtxEdit = function() {
+  if (!state.ctxMenuDiaryId) return;
+  viewDiaryEntry(state.ctxMenuDiaryId);
+  editDiaryEntryNew();
+  closeDiaryCtx();
+}
+
+window.exportDiaryPDF = function() {
+  if (!currentDiaryId) return;
+  const entry = diaryEntries.find(e => e.id === currentDiaryId);
+  if (!entry) return;
+  
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${entry.title || 'Untitled'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        h1 { font-size: 28px; margin-bottom: 10px; }
+        .meta { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .divider { border-top: 2px solid #ddd; margin: 20px 0; }
+        .content { font-size: 16px; }
+        h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        ul { margin: 10px 0; padding-left: 24px; }
+        li { margin: 4px 0; }
+      </style>
+    </head>
+    <body>
+      <h1>${entry.title || 'Untitled'}</h1>
+      <div class="meta">
+        Created: ${new Date(entry.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} | 
+        Last edited: ${new Date(entry.updated_at).toLocaleDateString()}
+      </div>
+      <div class="divider"></div>
+      <div class="content">${renderMarkdown(entry.content)}</div>
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      </script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+window.createWorkflow = function() {
+  const name = prompt('Workflow name:');
+  if (!name) return;
+  const workflow = {id: Date.now(), name, active: false, runs: 0};
+  const workflows = JSON.parse(localStorage.getItem('workflows') || '[]');
+  workflows.push(workflow);
+  localStorage.setItem('workflows', JSON.stringify(workflows));
+  renderWorkflows();
+  showToast('Workflow created', 'success');
+}
+
+window.openTemplates = function() {
+  showToast('Templates: Daily News, Stock Updates, Job Alerts', 'info');
+}
+
+window.openStatusPanel = function() {
+  const workflows = JSON.parse(localStorage.getItem('workflows') || '[]');
+  const active = workflows.filter(w => w.active).length;
+  const completed = workflows.reduce((sum, w) => sum + w.runs, 0);
+  showToast(`Active: ${active} | Completed: ${completed}`, 'info');
+}
+
+window.renderWorkflows = function() {
+  const workflows = JSON.parse(localStorage.getItem('workflows') || '[]');
+  const list = document.getElementById('workflow-list');
+  if (!workflows.length) {
+    list.innerHTML = '<div class="empty-list-hint">No workflows yet. Create one!</div>';
+    document.getElementById('active-workflows').textContent = '0';
+    document.getElementById('completed-workflows').textContent = '0';
+    return;
+  }
+  list.innerHTML = workflows.map(w => `
+    <div class="chat-item" onclick="toggleWorkflow(${w.id})">
+      <div class="chat-item-content">
+        <div class="chat-title">${w.active ? '🟢' : '⚪'} ${w.name}</div>
+        <div class="chat-preview">Runs: ${w.runs}</div>
+      </div>
+      <button class="icon-btn-sm" onclick="event.stopPropagation();deleteWorkflow(${w.id})" title="Delete">🗑️</button>
+    </div>
+  `).join('');
+  document.getElementById('active-workflows').textContent = workflows.filter(w => w.active).length;
+  document.getElementById('completed-workflows').textContent = workflows.reduce((sum, w) => sum + w.runs, 0);
+}
+
+window.toggleWorkflow = function(id) {
+  const workflows = JSON.parse(localStorage.getItem('workflows') || '[]');
+  const workflow = workflows.find(w => w.id === id);
+  if (workflow) {
+    workflow.active = !workflow.active;
+    if (workflow.active) workflow.runs++;
+    localStorage.setItem('workflows', JSON.stringify(workflows));
+    renderWorkflows();
+    showToast(workflow.active ? 'Workflow activated' : 'Workflow paused', 'info');
+  }
+}
+
+window.deleteWorkflow = function(id) {
+  const workflows = JSON.parse(localStorage.getItem('workflows') || '[]');
+  localStorage.setItem('workflows', JSON.stringify(workflows.filter(w => w.id !== id)));
+  renderWorkflows();
+  showToast('Workflow deleted', 'success');
+}
+
+window.checkBotStatus = async function() {
+  try {
+    const res = await fetch('/api/bot-status');
+    const data = await res.json();
+    const statusEl = document.getElementById('bot-status');
+    if (data.running) {
+      statusEl.textContent = '🟢 Running';
+      statusEl.style.color = '#10b981';
+      showToast('Bot is running', 'success');
+    } else {
+      statusEl.textContent = '🔴 Stopped';
+      statusEl.style.color = '#ef4444';
+      showToast('Bot is not running', 'error');
+    }
+  } catch(e) {
+    showToast('Could not check bot status', 'error');
+  }
+}
+
 window.fetchIndiaNews = async function() {
   if (!state.currentChatId) await newChat();
   
