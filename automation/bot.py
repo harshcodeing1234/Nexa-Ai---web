@@ -58,7 +58,8 @@ try:
                 title = entry.find('{http://www.w3.org/2005/Atom}title')
                 link = entry.find('{http://www.w3.org/2005/Atom}id')
                 if title is not None and link is not None:
-                    papers += f"{i}. {title.text.strip().replace('\n', ' ')}\n   [Read]({link.text.strip()})\n\n"
+                    clean_title = title.text.strip().replace('\n', ' ')
+                    papers += f"{i}. {clean_title}\n   [Read]({link.text.strip()})\n\n"
             return papers if papers else "Papers unavailable"
         except Exception as e:
             return f"Papers fetch failed: {str(e)[:50]}"
