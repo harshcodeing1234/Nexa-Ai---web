@@ -16,3 +16,14 @@ PyPDF2
 python-telegram-bot
 requests
 werkzeug
+bleach
+flask
+flask-cors
+flask-limiter
+gunicorn
+httpx==0.27.2
+openai
+PyPDF2
+python-dotenv
+python-telegram-bot
+requests
