@@ -7,3 +7,12 @@ python-telegram-bot
 requests
 mysql-connector-python>=8.0.0
 gunicorn>=21.0.0
+bleach
+flask
+gunicorn
+httpx==0.27.2
+openai
+PyPDF2
+python-telegram-bot
+requests
+werkzeug
