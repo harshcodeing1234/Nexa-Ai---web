@@ -712,6 +712,11 @@ textarea {
   min-height: 0;
 }
 
+#diary-area {
+  overflow-y: hidden;
+  height: 100%;
+}
+
 .chat-area::-webkit-scrollbar {
   width: 4px;
 }
@@ -1304,6 +1309,37 @@ textarea {
   font-size: 12px;
   max-width: 200px;
   z-index: 10;
+}
+
+/* Message content images - thumbnail preview */
+.message-content img,
+.message-content .chat-image {
+  max-width: 120px !important;
+  max-height: 120px !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  object-fit: cover !important;
+  display: inline-block !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.message-content img:hover,
+.message-content .chat-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .message-content img,
+  .message-content .chat-image {
+    max-width: 100px !important;
+    max-height: 100px !important;
+  }
 }
 
 .file-preview img {
@@ -2342,10 +2378,16 @@ kbd {
   }
 
   .file-preview img {
-    max-width: 100%;
-    height: auto;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
   }
 }
 
 
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hide header buttons in diary mode */
+body.diary-mode .hide-in-diary {
+  display: none !important;
+}

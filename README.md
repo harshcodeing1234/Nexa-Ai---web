@@ -1,6 +1,6 @@
 # Nexa AI — Full-Stack AI Chat Platform
 
-A beautiful, feature-rich AI assistant platform built with Python Flask + SQLite.
+A beautiful, feature-rich AI assistant platform built with Python Flask + MySQL.
 
 ## Features
 - **5 AI Models**: Nexa Pro, Flash, Vision, Code, Research
@@ -33,10 +33,21 @@ A beautiful, feature-rich AI assistant platform built with Python Flask + SQLite
 
 ### 1. Install Requirements
 ```bash
-pip install flask werkzeug openai
+pip install flask werkzeug openai mysql-connector-python bleach PyPDF2
 ```
 
-### 2. Configure Environment Variables
+### 2. Setup MySQL Database
+```bash
+# Login to MySQL
+mysql -u root -p
+
+# Create database
+CREATE DATABASE nexa;
+
+# The tables will be created automatically when you run the app
+```
+
+### 3. Configure Environment Variables
 Copy the example environment file and add your keys:
 ```bash
 cp .env.example .env
@@ -49,16 +60,39 @@ Edit `.env` and set:
 
 **IMPORTANT**: Never commit your `.env` file to version control!
 
-### 3. Run
+### 4. Run
 ```bash
-python app.py
-# OR
-bash run.sh
+python run.py
 ```
 
-Visit: **http://localhost:5000**
+Visit: **http://localhost:8080**
+
+## Database Configuration
+
+The app uses MySQL with the following connection:
+- Host: localhost
+- User: root
+- Password: welcome@123
+- Database: nexa
+
+To change these settings, edit the `get_db()` function in `app.py`.
 
 ## Production Deployment
+
+### Quick Start (100 users)
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables in .env
+SESSION_COOKIE_SECURE=True
+DB_PASSWORD=your_password
+
+# Run with gunicorn
+./start.sh
+# OR
+gunicorn -w 2 -b 0.0.0.0:8080 run:app
+```
 
 ### Security Checklist
 - [ ] Set `SESSION_COOKIE_SECURE=True` in `.env`
@@ -68,6 +102,7 @@ Visit: **http://localhost:5000**
 - [ ] Set up log monitoring
 - [ ] Regular database backups
 - [ ] Keep dependencies updated
+- [ ] Change MySQL root password
 
 ### Recommended Setup
 ```bash
@@ -82,9 +117,22 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ## Project Structure
 ```
 nexa_ai/
-├── app.py              # Flask backend + SQLite API
-├── nexa_ai.db          # SQLite database (auto-created)
-├── uploads/            # User profile photos
+├── run.py              # Application entry point
+├── app/
+│   ├── __init__.py     # App factory
+│   ├── routes/
+│   │   ├── auth.py     # Authentication routes
+│   │   ├── chats.py    # Chat & messaging routes
+│   │   ├── tasks.py    # Tasks & diary routes
+│   │   └── pages.py    # Page rendering routes
+│   ├── models/
+│   │   └── database.py # Database connection & schema
+│   ├── services/
+│   │   ├── ai_service.py      # AI response generation
+│   │   └── search_service.py  # Web search & Wikipedia
+│   └── utils/
+│       ├── security.py    # CSRF, rate limiting, headers
+│       └── validation.py  # Input validation & sanitization
 ├── templates/
 │   ├── index.html      # Landing page
 │   ├── auth.html       # Login/Signup
@@ -93,11 +141,12 @@ nexa_ai/
 │   └── 404.html        # Error page
 ├── static/
 │   ├── css/chat.css    # Chat styles
-│   ├── js/chat.js      # Chat logic (voice, tasks, etc.)
-│   ├── sw.js           # Service worker for offline support
+│   ├── js/chat.js      # Chat logic
+│   ├── sw.js           # Service worker
 │   ├── favicon.svg     # App icon
 │   └── manifest.json   # PWA manifest
-└── run.sh              # Startup script
+├── app_old.py          # Original monolithic file (backup)
+└── .env                # Environment variables
 ```
 
 ## Pages
@@ -135,7 +184,7 @@ nexa_ai/
 - `GET /api/stats` - Get user statistics
 
 ## Tech Stack
-- **Backend**: Python Flask 3.0+ + SQLite3
+- **Backend**: Python Flask 3.0+ + MySQL 8.0+
 - **Auth**: Werkzeug password hashing + CSRF tokens
 - **AI**: SambaNova API (DeepSeek, Llama, Qwen models)
 - **Voice**: Web Speech API (browser-native)
@@ -158,11 +207,14 @@ nexa_ai/
 
 ## Troubleshooting
 
-### Database locked error
+### MySQL connection error
 ```bash
-# Close all connections and restart
-rm nexa_ai.db
-python app.py
+# Check MySQL is running
+sudo systemctl status mysql
+
+# Login and verify database exists
+mysql -u root -p
+SHOW DATABASES;
 ```
 
 ### CSRF token errors

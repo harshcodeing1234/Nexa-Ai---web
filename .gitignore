@@ -86,5 +86,5 @@ logs/
 # Cache
 .cache/
 *.cache
-nexa_ai.db-shm
-nexa_ai.db-wal
+app_old.py
+

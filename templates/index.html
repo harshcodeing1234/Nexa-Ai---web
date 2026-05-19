@@ -631,9 +631,9 @@
     // Check current mode and update button
     const currentMode = localStorage.getItem('currentMode') || 'chat';
     const modeBtn = document.getElementById('mode-btn');
-    if (currentMode === 'automation') {
-      modeBtn.textContent = 'Automation';
-      modeBtn.innerHTML = '🤖 Automation';
+    if (currentMode === 'diary') {
+      modeBtn.textContent = 'Diary';
+      modeBtn.innerHTML = '📔 Diary';
     } else {
       modeBtn.textContent = 'Chat';
       modeBtn.innerHTML = '💬 Chat';
@@ -655,7 +655,7 @@
   <section class="hero" id="home">
     <div class="hero-badge"><span></span> Next-Generation AI Platform</div>
     <h1>Intelligence <span class="grad">Redefined</span><br>for Everyone</h1>
-    <p class="hero-sub">Full-stack AI platform with 5 specialized models, voice I/O, automation mode, task management,
+    <p class="hero-sub">Full-stack AI platform with 5 specialized models, voice I/O, personal diary, task management,
       and enterprise security — all in one beautiful interface.</p>
     <div class="hero-btns">
       <a class="hero-btn-main" href="/chat">Start Chatting Free →</a>
@@ -689,8 +689,8 @@
           <div class="section-tag">About Nexa AI</div>
           <h2>Built for the Future of Human–AI Collaboration</h2>
           <p style="color:var(--muted);line-height:1.8;font-size:16px;margin-bottom:20px;">Nexa AI is a full-stack
-            conversational intelligence platform built with Python Flask and SQLite. It combines multiple specialized AI
-            models, dual-mode interface (Chat & Automation), voice interaction, task management, and enterprise-grade
+            conversational intelligence platform built with Python Flask and MySQL. It combines multiple specialized AI
+            models, dual-mode interface (Chat & Diary), voice interaction, task management, and enterprise-grade
             security in one seamless experience.</p>
           <p style="color:var(--muted);line-height:1.8;font-size:16px;">With features like real-time web search, offline
             PWA support, message editing, chat export, and flexible authentication — Nexa isn't just an AI chatbot, it's
@@ -733,7 +733,7 @@
         <div class="feature-card">
           <div class="feature-icon">💬</div>
           <div class="feature-title">Dual Mode Interface</div>
-          <div class="feature-desc">Switch between Chat and Automation modes. Each with dedicated interface and
+          <div class="feature-desc">Switch between Chat and Diary modes. Each with dedicated interface and
             features.</div>
         </div>
         <div class="feature-card">
